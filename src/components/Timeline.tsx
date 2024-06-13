@@ -1,0 +1,208 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, Button } from 'react-native';
+import { apiClient } from '../api/client';
+import PostItem from './PostItem';
+import AvatarList from './AvatarList';
+import Footer from './Footer';
+import { useGlobalContext } from '../GlobalContext';
+import { Avatar } from '../types';
+
+interface Post {
+  postid: number;
+  username: string;
+  handle: string;
+  date: string;
+  content: string;
+  images: string[];
+  videos: string[];
+  audios: string[];
+  avatar: string;
+  comments: number;
+  likes: number;
+  shares: number;
+}
+
+const TimelineScreen = ({ navigation }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [timer, setTimer] = useState(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [expandedPosts, setExpandedPosts] = useState<{ [key: number]: boolean }>({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [availableAvatars, setAvailableAvatars] = useState<Avatar[]>([]);
+  const { avatarId, setAvatarId, avatars, setAvatars,  avatarDict, setAvatarDict} = useGlobalContext();
+
+  const handleHomePress = () => {
+    setPosts([]); // Clear the posts list before fetching new posts
+    console.log("################# Fetching posts for Home: ", avatarId); // Debugging line
+    apiClient.get(`/posts/${avatarId}/`)
+      .then(response => {
+        console.log("Fetched posts for Home:", response.data); // Debugging line
+        setPosts(response.data);
+      })
+      .catch(error => console.error(error));
+  };
+
+  useEffect(() => {
+    handleHomePress(); // Fetch timeline for home.
+
+    apiClient.get('/available-avatars')
+      .then(response => {
+        console.log("Available avatars:", response.data); // Debugging line
+        setAvailableAvatars(response.data);
+      })
+      .catch(error => console.error(error));
+  }, []);
+
+  const toggleExpand = (id: number) => {
+    setExpandedPosts(prevState => ({
+      ...prevState,
+      [id]: !prevState[id],
+    }));
+  };
+
+  const handleAvatarPress = (id: number) => {
+    setPosts([]); // Clear the posts list before fetching new posts
+    console.log("Fetching posts for avatar:", id); // Debugging line
+    console.log("######### Avatar dict:", avatarDict);
+    console.log("######### Avatar selected:", avatarId);
+    console.log("######### Avatar :", avatarDict[avatarId]);
+    apiClient.get(`/posts/${id}`)
+      .then(response => {
+        console.log("###################### Fetched posts:", response.data); // Debugging line
+        setPosts(response.data);
+        setAvatarId(id);
+        setIsExpanded(false);
+        clearTimeout(timer);
+      })
+      .catch(error => console.error(error));
+  };
+
+  const handleAddPress = () => {
+    setModalVisible(true);
+  };
+
+  const addPost = (post) => {
+    setPosts([post, ...posts]);
+  };
+
+  const handleAvatarSelect = (avatar: Avatar) => {
+    if (!avatars.some(a => a.id === avatar.id)) {
+      setAvatars([avatar, ...avatars]);
+
+      setAvatarDict(prevDict => ({
+        ...prevDict,
+        [avatar.id]: avatar,
+      }));
+
+      setAvatarId(avatar.id);
+      setModalVisible(false);
+
+      // Fetch posts for the selected avatar
+      setPosts([]); // Clear the posts list before fetching new posts
+      console.log("Fetching posts for new avatar:", avatar.id); // Debugging line
+      apiClient.get(`/posts/${avatar.id}`)
+        .then(response => {
+          console.log("Fetched posts for new avatar:", response.data); // Debugging line
+          setPosts(response.data);
+        })
+        .catch(error => console.error(error));
+    }
+  };
+
+  const renderAvailableAvatar = ({ item }: { item: Avatar }) => (
+    <TouchableOpacity onPress={() => handleAvatarSelect(item)} style={styles.avatarContainer}>
+      <Image style={styles.avatar} source={{ uri: item.avatar }} />
+      <Text style={styles.username} numberOfLines={1}>{item.username}</Text>
+    </TouchableOpacity>
+  );
+
+  const filterAvailableAvatars = () => {
+    const existingIds = avatars.map(avatar => avatar.id);
+    return availableAvatars.filter(avatar => !existingIds.includes(avatar.id));
+  };
+
+  const handleExpand = () => {
+    console.log("######### Coming from expand: ", avatarId, " ", avatarDict, " ", avatarDict[avatarId], " ############## ", avatarDict[avatarId].username)
+    if (isExpanded) {
+      setIsExpanded(false);
+      clearTimeout(timer);
+    } else {
+      setIsExpanded(true);
+      const newTimer = setTimeout(() => {
+        setIsExpanded(false);
+      }, 5000);
+      setTimer(newTimer);
+    }
+  };
+
+  const renderPost = ({ item }: { item: Post }) => (
+    <PostItem
+      post={item}
+      isExpanded={!!expandedPosts[item.postid]}
+      toggleExpand={toggleExpand}
+    />
+  );
+
+  return (
+    <View style={styles.container}>
+      <AvatarList
+        onAvatarPress={handleAvatarPress}
+        onAddPress={handleAddPress}
+        handleExpand={handleExpand}
+        isExpanded={isExpanded}
+      />
+
+      <FlatList
+        data={posts}
+        renderItem={renderPost}
+        keyExtractor={item => item.postid.toString()}
+      />
+
+      <Modal visible={modalVisible} animationType="slide">
+        <View style={styles.modalContainer}>
+          <FlatList
+            data={filterAvailableAvatars()}
+            renderItem={renderAvailableAvatar}
+            keyExtractor={item => item.id.toString()}
+            numColumns={3}
+            contentContainerStyle={styles.modalList}
+          />
+          <Button title="Close" onPress={() => setModalVisible(false)} />
+        </View>
+      </Modal>
+      <Footer navigation={navigation} addPost={addPost} homeFn={handleHomePress}/>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FBFAF7',
+  },
+  avatarContainer: {
+    alignItems: 'center',
+    margin: 5,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  username: {
+    marginTop: 5,
+    fontSize: 14,
+  },
+  modalContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalList: {
+    justifyContent: 'center',
+  },
+});
+
+export default TimelineScreen;
