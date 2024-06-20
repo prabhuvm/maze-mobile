@@ -10,7 +10,7 @@ const DetailsScreen = ({ route }) => {
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={require('../assets/icons/back.png')} style={styles.icon} />
+          <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
         </TouchableOpacity>
       <Image source={{ uri: bot.image }} style={styles.botImage} />
       <Text style={styles.botName}>{bot.name}</Text>

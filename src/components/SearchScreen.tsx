@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { apiClient } from '../api/client';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useGlobalContext } from '../GlobalContext';
+import UserList from './UserList';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SearchScreen = () => {
   const route = useRoute();
@@ -11,6 +14,8 @@ const SearchScreen = () => {
   const [avatars, setAvatars] = useState([]);
   const [peoplePage, setPeoplePage] = useState(1);
   const [avatarsPage, setAvatarsPage] = useState(1);
+  const {username} = useGlobalContext();
+  const[followDetails, setFollowDetails] = useState({});
 
   useEffect(() => {
     fetchPeople();
@@ -24,12 +29,23 @@ const SearchScreen = () => {
   }, [route.params]);
 
   const handleSearch = () => {
-    navigation.navigate("Search", { keywords });
+    //calling again to sync with go press
+    fetchPeople();
+    fetchAvatars();
   };
 
-  const fetchPeople = (page = 1) => {
-    apiClient.get(`/users/search/`, { params: { keywords, page } })
+  const fetchPeople = async (page = 1) => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+
+    await apiClient.get(`/users/search/`, 
+    { 
+      params: { keywords, page }, 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      } 
+      })
       .then(response => {
+        console.log("Search results: ", response.data);
         if (page === 1) {
           setPeople(response.data);
         } else {
@@ -39,8 +55,14 @@ const SearchScreen = () => {
       .catch(error => console.error('Error fetching people:', error));
   };
 
-  const fetchAvatars = (page = 1) => {
-    apiClient.get(`/avatars/search/`, { params: { keywords, page } })
+  const fetchAvatars = async (page = 1) => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.get(`/avatars/search/`, { 
+      params: { keywords, page }, 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      }
+    })
       .then(response => {
         if (page === 1) {
           setAvatars(response.data);
@@ -51,28 +73,15 @@ const SearchScreen = () => {
       .catch(error => console.error('Error fetching avatars:', error));
   };
 
-  const renderPerson = ({ item }) => (
-    <View style={styles.itemContainer}>
-      <Image source={{ uri: item.image }} style={styles.avatar} />
-      <View style={styles.itemTextContainer}>
-        <Text style={styles.itemName}>{item.name}</Text>
-        <Text style={styles.itemProfile}>{item.profile}</Text>
-      </View>
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Follow</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   const renderAvatar = ({ item }) => (
     <View style={styles.itemContainer}>
-      <Image source={{ uri: item.image }} style={styles.avatar} />
+      <Image source={/*{ uri: item.image } */ require('../assets/images/robot.gif')} style={styles.avatar} />
       <View style={styles.itemTextContainer}>
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemProfile}>{item.profile}</Text>
       </View>
       <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Add</Text>
+        <Text style={styles.addButtonText}>Add</Text>
       </TouchableOpacity>
     </View>
   );
@@ -91,12 +100,10 @@ const SearchScreen = () => {
         </TouchableOpacity>
       </View>
       <Text style={styles.sectionTitle}>People</Text>
-      <FlatList
-        data={people}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPerson}
-        contentContainerStyle={styles.listContainer}
-      />
+
+      <UserList
+      people={people}/>
+      
       <Text style={styles.sectionTitle}>Avatars</Text>
       <FlatList
         data={avatars}
@@ -119,16 +126,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F3F3F3',
     borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginBottom: 20,
+    paddingHorizontal: 5,
+    marginBottom: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
   },
   goButton: {
-    backgroundColor: '#000',
+    backgroundColor: '#333',
     padding: 10,
     borderRadius: 5,
     marginLeft: 5,
@@ -159,8 +165,10 @@ const styles = StyleSheet.create({
   },
   itemTextContainer: {
     flex: 1,
+    alignItems : 'center',
   },
   itemName: {
+    paddingTop: 16,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -174,7 +182,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 15,
   },
-  buttonText: {
+  addButtonText: {
     fontSize: 16,
     color: '#000',
   },

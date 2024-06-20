@@ -1,103 +1,181 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Modal, TouchableWithoutFeedback, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, Modal, StyleSheet, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
 
-const PostModal = ({visible, onClose, addPost, navigation}) => {
+const PostModal = ({ visible, onClose, addPost, navigation }) => {
   const [text, setText] = useState('');
-  const {username, avatarId} = useGlobalContext();
+  const { username, avatarId, avatarDict } = useGlobalContext();
 
   const handleSubmit = () => {
     const query = text;
     setText('');
+    console.log("POST: Executing query with ", `posts/${username}/${avatarId}/`, " for ", query);
     onClose();
     if (query.trim()) {
       apiClient.post(`posts/${username}/${avatarId}/`, { question: query })
         .then(response => {
-          console.log("Recieved Response is: ", response.data);
+          console.log("Received Response is: ", response.data);
           addPost(response.data);
         })
         .catch(error => console.error(error));
     }
   };
-  
-  const ModalComponent = 
-<Modal
+
+  const samplePosts = [
+    "What's your favorite book and why?",
+    "What's the best piece of advice you've ever received?",
+    "What's your favorite place to visit?",
+  ];
+
+  const ModalComponent =
+    <Modal
       animationType="slide"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingView}
+      >
         <View style={styles.modalBackground}>
-          <TouchableWithoutFeedback>
-            <View style={styles.modalContainer}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={onClose}>
+              <Image source={require('../assets/icons/close.png')} style={styles.icon} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Ask {avatarDict[avatarId].username}</Text>
+            <TouchableOpacity onPress={handleSubmit}>
+              <Text style={styles.postButton}>Ask</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalContainer}>
+            <View style={styles.inputContainer}>
+              <Image source={require('../assets/images/human.jpeg')} style={styles.userAvatar} />
               <TextInput
                 style={styles.input}
-                placeholder="What's on your mind?"
+                placeholder="Ask me anything"
                 value={text}
                 onChangeText={setText}
                 multiline
               />
-              <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-                <Text style={styles.buttonText}>Post</Text>
-              </TouchableOpacity>
+              <View style={styles.iconContainer}>
+                <TouchableOpacity>
+                  <Image source={require('../assets/icons/camera.png')} style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <Image source={require('../assets/icons/video.png')} style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <Image source={require('../assets/icons/image.png')} style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <Image source={require('../assets/icons/user.png')} style={styles.icon} />
+                </TouchableOpacity>
+              </View>
             </View>
-          
-          </TouchableWithoutFeedback>
+            <ScrollView style={styles.samplePostsContainer}>
+              <Text style={styles.samplePostsTitle}>Sample Queries</Text>
+              {samplePosts.map((postItem, index) => (
+                <TouchableOpacity key={index} style={styles.samplePost} onPress={() => setText(postItem)}>
+                  <Image source={require('../assets/icons/comment.png')} style={styles.samplePostIcon} />
+                  <Text style={styles.samplePostText}>{postItem}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
         </View>
-      </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
 
-return (ModalComponent);
+  return (ModalComponent);
 };
 
 const styles = StyleSheet.create({
-  container: {
+  keyboardAvoidingView: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    padding: 15,
-    fontSize: 16,
-    marginBottom: 20,
-    height: 150,
-    textAlignVertical: 'top',
-  },
-  button: {
-    flex: 1,
-    backgroundColor: 'blue',
-    borderRadius: 10,
-    paddingVertical: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   modalBackground: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 10,
+  },
+  closeButton: {
+    fontSize: 24,
+    color: '#000',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  postButton: {
+    fontSize: 18,
+    color: '#333',
   },
   modalContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
+    flex: 1,
+    padding: 10,
+  },
+  inputContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#ccc',
     borderRadius: 10,
+    padding: 5,
+    marginBottom: 10,
+    height: 200, // Set a fixed height instead of percentage
+  },
+  userAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 20,
+    marginBottom: 10,
+  },
+  input: {
+    fontSize: 16,
+    flex: 1,
+    textAlignVertical: 'top',
+    width: '100%',
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginTop: 1,
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    tintColor: '#333',
+    marginRight: 10,
+  },
+  samplePostsContainer: {
+    marginTop: 20,
+  },
+  samplePostsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  samplePost: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 10,
+  },
+  samplePostIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+  },
+  samplePostText: {
+    fontSize: 14,
+    color: '#333',
   },
 });
 

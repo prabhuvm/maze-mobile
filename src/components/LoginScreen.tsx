@@ -1,24 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from '../GlobalContext';
 import ResetPasswordModal from './ResetPasswordModal';
+import DeviceInfo from 'react-native-device-info';
 
 const AuthScreen = () => {
   const [password, setPassword] = useState('');
+  const [deviceName, setDeviceName] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
-  const { username, setAccessToken, setUsername, setRefreshToken } = useGlobalContext();
-
+  const { username, setAccessToken, setUsername, setRefreshToken, deviceId, setDeviceId} = useGlobalContext();
   const [verifyError, setVerifyError] = useState(false);
   const [verifyErrMessage, setVerifyErrMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
 
+  useEffect(() => {
+       // Get the device name
+       DeviceInfo.getDeviceName().then((name) => {
+        setDeviceName(name);
+      });
+
+      // Get the device name
+      DeviceInfo.getUniqueId().then((id) => {
+        setDeviceId(id);
+      });
+  }, []);
+
   const handleLogin = () => {
     setStatusMessage("Processing...");
-    apiClient.post('users/user-login/', { username, password })
+    console.log("###### Device identities - ID: ", deviceId, " Name: ", deviceName);
+    apiClient.post('users/login/', { username, password, deviceId, deviceName })
       .then(response => {
         const { accessToken, refreshToken } = response.data;
         AsyncStorage.setItem('accessToken', accessToken);

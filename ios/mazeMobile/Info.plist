@@ -33,20 +33,6 @@
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>arm64</string>
-	</array>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Roboto-Black.ttf</string>
@@ -62,5 +48,67 @@
 		<string>Roboto-Thin.ttf</string>
 		<string>Roboto-ThinItalic.ttf</string>
 	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to upload profile pictures</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to upload profile pictures</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>CFBundleIcons</key>
+		<dict>
+			<key>CFBundlePrimaryIcon</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>ic_16</string>
+					<string>ic_20</string>
+					<string>ic_29</string>
+					<string>ic_32</string>
+					<string>ic_40</string>
+					<string>ic_48</string>
+					<string>ic_50</string>
+					<string>ic_55</string>
+					<string>ic_57</string>
+					<string>ic_58</string>
+					<string>ic_60</string>
+					<string>ic_72</string>
+					<string>ic_76</string>
+					<string>ic_80</string>
+					<string>ic_87</string>
+					<string>ic_88</string>
+					<string>ic_92</string>
+					<string>ic_100</string>
+					<string>ic_102</string>
+					<string>ic_114</string>
+					<string>ic_120</string>
+					<string>ic_144</string>
+					<string>ic_152</string>
+					<string>ic_167</string>
+					<string>ic_172</string>
+					<string>ic_180</string>
+					<string>ic_196</string>
+					<string>ic_216</string>
+					<string>ic_256</string>
+					<string>ic_512</string>
+					<string>ic_1024</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false/>
+			</dict>
+		</dict>
 </dict>
 </plist>

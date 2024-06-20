@@ -1,5 +1,5 @@
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity} from 'react-native';
-import { Avatar } from '../types';
+import React from 'react';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useGlobalContext } from '../GlobalContext';
 
 interface AvatarListProps {
@@ -10,18 +10,18 @@ interface AvatarListProps {
 }
 
 const AvatarList: React.FC<AvatarListProps> = ({ onAvatarPress, onAddPress, isExpanded, handleExpand }) => {
+  const { avatarId, avatars, avatarDict } = useGlobalContext();
 
-  const { avatarId, avatars,  avatarDict} = useGlobalContext();
- 
   const renderCategory = (category) => (
     <TouchableOpacity
-      key={category}
+      key={category.id}
       onPress={() => onAvatarPress(category.id)}
       style={[
         styles.category,
         avatarId === category.id && styles.selectedCategory
       ]}
     >
+      <Image source={require(`../assets/images/robot.gif`)} style={styles.categoryIcon} />
       <Text style={[
         styles.categoryText,
         avatarId === category.id && styles.selectedCategoryText
@@ -33,22 +33,23 @@ const AvatarList: React.FC<AvatarListProps> = ({ onAvatarPress, onAddPress, isEx
 
   return (
     <View style={styles.pinnedContainer}>
-        <TouchableOpacity style={styles.addButton} onPress={onAddPress}>
-          <Image source={require('../assets/icons/bplus.png')} style={styles.addIcon} />
+      <TouchableOpacity style={styles.addButton} onPress={onAddPress}>
+        <Image source={require('../assets/icons/bplus.png')} style={styles.addIcon} />
+      </TouchableOpacity>
+      {!isExpanded && (
+        <TouchableOpacity style={[styles.category, styles.selectedCategory]} onPress={handleExpand}>
+          <Image source={require(`../assets/images/robot.gif`)} style={styles.categoryIcon} />
+          <Text style={[styles.categoryText, styles.selectedCategoryText]}>
+            {avatarId && avatarDict[avatarId]?.username ? avatarDict[avatarId].username : 'No-Avatar'}
+          </Text>
         </TouchableOpacity>
-        {!isExpanded && (
-          <TouchableOpacity style={[styles.category, styles.selectedCategory]} onPress={handleExpand}>
-            <Text style={[styles.categoryText, styles.selectedCategoryText]}>
-            {avatarId && avatarDict[avatarId].username ? avatarDict[avatarId].username: 'No-Avatar'} 
-            </Text>
-          </TouchableOpacity>
-        )}
-        {isExpanded && (
-          <ScrollView horizontal style={styles.categoryContainer} showsHorizontalScrollIndicator={false}>
-            {avatars.map(renderCategory)}
-          </ScrollView>
-        )}
-      </View>
+      )}
+      {isExpanded && (
+        <ScrollView horizontal style={styles.categoryContainer} showsHorizontalScrollIndicator={false}>
+          {avatars.map(renderCategory)}
+        </ScrollView>
+      )}
+    </View>
   );
 };
 
@@ -72,23 +73,30 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   addIcon: {
-    width: 30,
-    height: 30,
+    width: 36,
+    height: 36,
   },
   categoryContainer: {
     flexDirection: 'row',
   },
   category: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 5,
-    paddingHorizontal: 15,
-    borderRadius: 10,
+    paddingRight: 15,
+    paddingLeft: 5,
+    borderRadius: 20,
     backgroundColor: '#f0f0f0',
     marginHorizontal: 5,
-    alignSelf: 'center',
-    alignItems: 'center',
   },
   selectedCategory: {
-    backgroundColor: '#000',
+    backgroundColor: '#333',
+  },
+  categoryIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    marginRight: 10,
   },
   categoryText: {
     color: '#000',

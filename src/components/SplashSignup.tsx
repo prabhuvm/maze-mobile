@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, Animated, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SplashSignup = () => {
   const navigation = useNavigation();
@@ -11,9 +12,13 @@ const SplashSignup = () => {
   const [initialRoute, setInitialRoute] = useState('');
   const { setAvatars, setAvatarDict, setAvatarId } = useGlobalContext();
 
-  const prepareAndLoadTimeline = () => {
-    apiClient.get('/avatars/')
-      .then(response => {
+  const prepareAndLoadTimeline = async() => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.get('/avatars/', { 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      }
+    }).then(response => {
         setAvatarId(1);
         console.log("Avatars:", response.data); // Debugging line
         setAvatars(response.data);

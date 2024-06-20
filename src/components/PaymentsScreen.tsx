@@ -4,29 +4,32 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'rea
 
 const PaymentsScreen = () => {
     const navigation = useNavigation();
-  const credits = 200000;
+  const credits = 200;
 
   const purchases = [
-    { id: '1', name: 'AI generated blog post', range: '1000 - 10,000 coins', image: 'path-to-blog-post-image' },
-    { id: '2', name: 'AI generated video', range: '5,000 - 50,000 coins', image: 'path-to-video-image' },
-    { id: '3', name: 'AI generated tweet', range: '100 - 1,000 coins', image: 'path-to-tweet-image' },
+    { id: '1', name: 'AI generated blog post', range: '100 - 1,000 coins', image: 'path-to-blog-post-image' },
+    { id: '2', name: 'AI generated video', range: '500 - 5,000 coins', image: 'path-to-video-image' },
+    { id: '3', name: 'AI generated tweet', range: '10 - 100 coins', image: 'path-to-tweet-image' },
   ];
 
   const waysToAddCredits = [
-    { id: '1', name: 'Invite friends', credits: '+ 500 coins', icon: 'path-to-invite-icon' },
-    { id: '2', name: 'Complete levels', credits: '+ 2000 coins', icon: 'path-to-levels-icon' },
-    { id: '3', name: 'Redeem coupon', credits: '+ 1000 coins', icon: 'path-to-coupon-icon' },
+    { id: '1', name: 'Invite friends', credits: '+ 50 coins', icon: 'path-to-invite-icon' },
+    { id: '2', name: 'Complete levels', credits: '+ 200 coins', icon: 'path-to-levels-icon' },
+    { id: '3', name: 'Redeem coupon', credits: '+ 100 coins', icon: 'path-to-coupon-icon' },
   ];
 
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={require('../assets/icons/back.png')} style={styles.icon} />
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingsButton} onPress={() => navigation.goBack()}>
-          <Image source={require('../assets/icons/cog.png')} style={styles.icon} />
+        <Text style={styles.title}>Coins</Text>
+        <TouchableOpacity style={styles.settingsButton}>
+          {/* <Image source={require('../assets/icons/cog.png')} style={styles.icon} /> */}
         </TouchableOpacity>
-      <Text style={styles.title}>Coins</Text>
+      </View>
+
       <Text style={styles.credits}>You have {credits.toLocaleString()} coins</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.addButton}>
@@ -64,23 +67,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FBFAF7',
-    padding: 20,
+    padding: 10,
   },
-  settingsButton: {
-    alignSelf: 'flex-end',
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   icon: {
     width: 30,
     height: 30,
   },
+  settingsButton: {
+    flexDirection: 'row',
+  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     marginVertical: 20,
+    alignSelf: 'center',
     color: '#000',
   },
   credits: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#000',

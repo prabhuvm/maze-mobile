@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client'; // Import your API client
 import Svg, { Path } from 'react-native-svg';
 import { useGlobalContext } from '../GlobalContext';
+import DeviceInfo from 'react-native-device-info';
 
 const SplashOpen = () => {
   const navigation = useNavigation();
@@ -14,11 +15,26 @@ const SplashOpen = () => {
   const svgDashOffset = useRef(new Animated.Value(1)).current;
   const svgOpacity = useRef(new Animated.Value(1)).current;
   const [initialRoute, setInitialRoute] = useState('');
-  const {setAccessToken, setRefreshToken, setUsername, setAvatars, setAvatarDict, setAvatarId} = useGlobalContext();
+  const {deviceId, setDeviceId, setAccessToken, setRefreshToken, setUsername, setAvatars, setAvatarDict, setAvatarId} = useGlobalContext();
 
-  const prepareAndLoadTimeline = () => {
-    apiClient.get('/avatars/')
-      .then(response => {
+  useEffect(() => {
+    const fetchDeviceInfo = async () => {
+   // Get the device name
+   DeviceInfo.getUniqueId().then((id) => {
+    console.log("##### Setting deviceId: ", id);
+     setDeviceId(id);
+   });
+  }
+  fetchDeviceInfo();
+}, []);
+
+  const prepareAndLoadTimeline = async() => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.get('/avatars/', { 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      }
+    }).then(response => {
         setAvatarId(1);
         console.log("Avatars:", response.data); // Debugging line
         setAvatars(response.data);
@@ -41,7 +57,7 @@ const SplashOpen = () => {
       console.log('##################### access token exist: ', accessToken)
       if (accessToken) {
         try {
-          const response = await apiClient.get('/users/verify-token/', { headers: { Authorization: `Bearer ${accessToken}` } });
+          const response = await apiClient.post('/users/verify-token/', {deviceId}, { headers: { Authorization: `Bearer ${accessToken}` } });
           console.log('##################### Verify token: ', response.data,"  ",  response.status)
           if(response.status === 200) {
             console.log("Setting username: ", response.data.username)
@@ -68,7 +84,7 @@ const SplashOpen = () => {
 
     const refreshAccessToken = async (refreshToken) => {
       try {
-        const response = await apiClient.post('/users/refresh-token/', { refresh: refreshToken });
+        const response = await apiClient.post('/users/refresh-token/', { refresh: refreshToken, deviceId });
         if (response.status === 200) {
           console.log('##################### Refresh token: ', response.data)
           const { accessToken, refreshToken, userName } = response.data;
@@ -85,8 +101,10 @@ const SplashOpen = () => {
       return false;
     };
 
-    checkAuth();
-  }, []);
+    if (deviceId) {
+      checkAuth();
+    }
+  }, [deviceId]);
 
   useEffect(() => {
     // Animate the maze drawing

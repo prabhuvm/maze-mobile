@@ -6,6 +6,7 @@ import AvatarList from './AvatarList';
 import Footer from './Footer';
 import { useGlobalContext } from '../GlobalContext';
 import { Avatar } from '../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Post {
   postid: number;
@@ -31,10 +32,15 @@ const TimelineScreen = ({ navigation }) => {
   const [availableAvatars, setAvailableAvatars] = useState<Avatar[]>([]);
   const { avatarId, setAvatarId, avatars, setAvatars,  avatarDict, setAvatarDict} = useGlobalContext();
 
-  const handleHomePress = () => {
+  const handleHomePress = async () => {
     setPosts([]); // Clear the posts list before fetching new posts
     console.log("################# Fetching posts for Home: ", avatarId); // Debugging line
-    apiClient.get(`/posts/${avatarId}/`)
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    apiClient.get(`/posts/${avatarId}/`, { 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      } 
+      })
       .then(response => {
         console.log("Fetched posts for Home:", response.data); // Debugging line
         setPosts(response.data);
@@ -60,13 +66,19 @@ const TimelineScreen = ({ navigation }) => {
     }));
   };
 
-  const handleAvatarPress = (id: number) => {
+  const handleAvatarPress = async (id: number) => {
     setPosts([]); // Clear the posts list before fetching new posts
     console.log("Fetching posts for avatar:", id); // Debugging line
     console.log("######### Avatar dict:", avatarDict);
     console.log("######### Avatar selected:", avatarId);
     console.log("######### Avatar :", avatarDict[avatarId]);
-    apiClient.get(`/posts/${id}`)
+
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    apiClient.get(`/posts/${id}`, { 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      } 
+      })
       .then(response => {
         console.log("###################### Fetched posts:", response.data); // Debugging line
         setPosts(response.data);
@@ -78,14 +90,14 @@ const TimelineScreen = ({ navigation }) => {
   };
 
   const handleAddPress = () => {
-    setModalVisible(true);
+    navigation.navigate('Collections');
   };
 
   const addPost = (post) => {
     setPosts([post, ...posts]);
   };
 
-  const handleAvatarSelect = (avatar: Avatar) => {
+  const handleAvatarSelect = async (avatar: Avatar) => {
     if (!avatars.some(a => a.id === avatar.id)) {
       setAvatars([avatar, ...avatars]);
 
@@ -100,8 +112,12 @@ const TimelineScreen = ({ navigation }) => {
       // Fetch posts for the selected avatar
       setPosts([]); // Clear the posts list before fetching new posts
       console.log("Fetching posts for new avatar:", avatar.id); // Debugging line
-      apiClient.get(`/posts/${avatar.id}`)
-        .then(response => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      apiClient.get(`/posts/${avatar.id}`, { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}` 
+        } 
+        }).then(response => {
           console.log("Fetched posts for new avatar:", response.data); // Debugging line
           setPosts(response.data);
         })

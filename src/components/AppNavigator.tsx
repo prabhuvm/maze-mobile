@@ -7,10 +7,12 @@ import CustomDrawerContent from './CustomDrawerContent'; // Import the custom dr
 import CustomDrawerHeader from './CustomDrawerHeader'; // Import the custom drawer header component
 import UpdateProfileScreen from './UpdateProfileScreen';
 import PaymentsScreen from './PaymentsScreen';
+import { useGlobalContext } from '../GlobalContext';
 
 const Drawer = createDrawerNavigator();
 
 const AppNavigator = () => {
+  const { username: loginUsername } = useGlobalContext();
   return (
 
       <Drawer.Navigator
@@ -20,9 +22,14 @@ const AppNavigator = () => {
         }}
       >
         <Drawer.Screen name="Timeline" component={Timeline} />
-        <Drawer.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }}  />
-        <Drawer.Screen name="Coins" component={PaymentsScreen} options={{ headerShown: false }}  />
-        <Drawer.Screen name="UpdateProfile" component={UpdateProfileScreen} options={{ headerShown: false }}  />
+        <Drawer.Screen
+        name="Profile"
+        component={ProfileScreen}
+        initialParams={{ profileUsername: loginUsername }}
+        options={{ headerShown: false }}
+        />
+        <Drawer.Screen name="Coins" component={PaymentsScreen}  options={{ headerShown: false }}  />
+        <Drawer.Screen name="Update Profile" component={UpdateProfileScreen} options={{ headerShown: false }}  />
       </Drawer.Navigator>
 
   );

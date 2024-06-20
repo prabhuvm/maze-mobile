@@ -1,12 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DeviceInfo from 'react-native-device-info';
 
 const SignupStep2 = () => {
-  const {username, setUsername} = useGlobalContext();
+  const {username, deviceId, setUsername, setDeviceId} = useGlobalContext();
+  const [deviceName, setDeviceName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -44,11 +46,23 @@ const SignupStep2 = () => {
     return valid;
   };
 
+  useEffect(() => {
+    // Get the device name
+    DeviceInfo.getDeviceName().then((name) => {
+     setDeviceName(name);
+   });
+
+   // Get the device name
+   DeviceInfo.getUniqueId().then((id) => {
+     setDeviceId(id);
+   });
+}, []);
+
   const handleSignup = () => {
     if (validateFields()) {
       setStatusMessage("Processing...");
       apiClient.post('/users/sign-up/', {
-        email, username, password
+        email, username, password, deviceId, deviceName
       })
         .then(response => {
           console.log("########################### sign up: ", response.data, ":::", response.status);

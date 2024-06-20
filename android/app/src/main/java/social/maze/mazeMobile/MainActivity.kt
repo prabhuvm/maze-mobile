@@ -1,4 +1,4 @@
-package com.mazemobile
+package social.maze.mazeMobile
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

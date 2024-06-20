@@ -25,15 +25,15 @@ const InterestsScreen = () => {
     }
   };
 
-  const saveInterests = () => {
+  const saveInterests = async() => {
     console.log("########## Selected Interests: ", selectedInterests)
-    const accessToken = AsyncStorage.getItem('accessToken');
+    const accessToken = await AsyncStorage.getItem('accessToken');
     const modifiedInterests = selectedInterests.map(item => ({ interest: item.id })) 
-    apiClient.post(`/interests/${username}/`, modifiedInterests 
-    // ,{
-    //   headers: {
-    //     'Authorization': `Bearer ${accessToken}`
-    //   }}
+    await apiClient.post(`/interests/${username}/`, modifiedInterests 
+    ,{
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }}
     )
       .then(response => {
         if (response.status === 201) {

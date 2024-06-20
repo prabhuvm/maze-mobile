@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
 import { apiClient } from '../api/client';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const EmailVerificationModal = ({ visible, onClose, username, navigation }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
 
-  const handleVerify = () => {
-    apiClient.post('/users/verify-email-code/', { username, verificationCode })
+  const handleVerify = async() => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.post('/users/verify-email-code/', { username, verificationCode }, { headers: { 
+      Authorization: `Bearer ${accessToken}` 
+    } })
       .then(response => {
         if (response.status === 200) {
           setStatusMessage('Email verified successfully.');

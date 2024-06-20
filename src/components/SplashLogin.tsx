@@ -14,8 +14,13 @@ const SplashLogin = () => {
   const [initialRoute, setInitialRoute] = useState('');
   const { setAvatars, setAvatarDict, setAvatarId } = useGlobalContext();
 
-  const prepareAndLoadTimeline = () => {
-    apiClient.get('/avatars/')
+  const prepareAndLoadTimeline = async () => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.get('/avatars/', { 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      }
+    })
       .then(response => {
         setAvatarId(1);
         console.log("Avatars:", response.data); // Debugging line

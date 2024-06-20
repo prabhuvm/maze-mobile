@@ -12,17 +12,21 @@ const EligibilityScreen = () => {
 
   useEffect(() => {
 
-    apiClient.get(`/users/${username}/eligible`
-    // , 
-    //       {
-    //   headers: {
-    //     'Authorization': `Bearer ${accessToken}`
-    //   }}
-    )
-      .then(response => {
-        setEligible(response.data.eligible);
-      })
-      .catch(error => console.error(error));
+    const checkEligible = async() => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      apiClient.get(`/users/${username}/eligible`, 
+            {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }}
+      )
+        .then(response => {
+          setEligible(response.data.eligible);
+        })
+        .catch(error => console.error(error));
+    }
+    checkEligible();
+    
   }, []);
 
   if (eligible === null) {
@@ -37,7 +41,7 @@ const EligibilityScreen = () => {
       </View>
     );
   }
-  navigation.navigate('SplashSignup');
+  navigation.navigate('Explore');
 };
 
 const styles = StyleSheet.create({

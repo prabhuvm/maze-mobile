@@ -4,18 +4,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '../api/client';
 import { useTheme } from '../styles/ThemeContext';
 import { themes } from '../styles/themes';
+import { useGlobalContext } from '../GlobalContext';
 
 const SettingsModal = ({ visible, onClose, navigation }) => {
   const { setTheme } = useTheme();
+  const {deviceId} = useGlobalContext()
 
   const handleLogout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       const accessToken = await AsyncStorage.getItem('accessToken');
-      console.log("########################  log-out access token: ", accessToken);
       if (refreshToken) {
-        const response = await apiClient.get('/users/log-out/', { headers: { Authorization: `Bearer ${accessToken}`} });
-        console.log("########################  log-out response: ", response);
+        const response = await apiClient.post('/users/logout/', { deviceId }, 
+        { headers: { 
+          Authorization: `Bearer ${accessToken}`
+        } });
       } else {
         Alert.alert('Error', 'No refresh token found');
       }

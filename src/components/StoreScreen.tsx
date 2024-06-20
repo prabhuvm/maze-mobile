@@ -59,10 +59,13 @@ const StoreScreen = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={require('../assets/icons/back.png')} style={styles.icon} />
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
         </TouchableOpacity>
-      <Text style={styles.title}>AI Bot Collections</Text>
+        <Text style={styles.title}>AI Bot Collections</Text>
+      </View>
+
       <FlatList
         data={bots}
         keyExtractor={(item) => item.id}
@@ -70,7 +73,7 @@ const StoreScreen = () => {
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
       />
-      <TouchableOpacity style={styles.downloadAllButton}>
+      <TouchableOpacity style={styles.downloadAllButton} onPress={() => navigation.navigate('Collections')}>
         <Text style={styles.downloadAllButtonText}>Your Collections</Text>
       </TouchableOpacity>
     </View>
@@ -82,7 +85,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FBFAF7',
   },
+
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   icon: {
+    marginLeft: 20,
     width: 30,
     height: 30,
   },

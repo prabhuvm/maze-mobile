@@ -1,4 +1,4 @@
-package com.mazemobile
+package social.maze.mazeMobile
 
 import android.app.Application
 import com.facebook.react.PackageList
