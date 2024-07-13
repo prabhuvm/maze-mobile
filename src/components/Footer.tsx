@@ -4,6 +4,9 @@ import PostModal from './PostModal';
 import EmailVerificationModal from './EmailVerificationModal';
 import { useGlobalContext } from '../GlobalContext';
 import { useTheme } from '../styles/ThemeContext';
+import {
+  sampleNotifications
+} from '../notificationSetup'
 
 const Footer = ({ navigation, addPost, homeFn }) => {
   const [postModalVisible, setPostModalVisible] = useState(false);
@@ -51,10 +54,10 @@ const Footer = ({ navigation, addPost, homeFn }) => {
         <View style={styles.dummyIconButton}>
           <Image source={require('../assets/icons/plus.png')} style={[styles.icon, styles.invisibleIcon]} />
         </View>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Message')}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Message', {fusername:username})}>
           <Image source={require('../assets/icons/message.png')} style={styles.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Notification')}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => {  navigation.navigate('Notification');}}>
           <Image source={require('../assets/icons/bell.png')} style={styles.icon} />
         </TouchableOpacity>
       </View>

@@ -141,6 +141,10 @@ const ProfileScreen = () => {
           <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
         </TouchableOpacity>
         <Text style={styles.title}>@{profileUsername}</Text>
+        {curUser ? <Text></Text> : <TouchableOpacity onPress={() => navigation.navigate('Message', {fusername:profileUsername})}>
+          <Image source={require('../assets/icons/message.png')} style={styles.icon} />
+        </TouchableOpacity>}
+        
       </View>
       <View style={styles.profileContainer}>
         <Image source={profilePic || require('../assets/images/human.jpeg')} style={styles.avatar} />
@@ -186,6 +190,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 10,
     alignItems: 'center',
     marginBottom: 2,
@@ -194,7 +199,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginVertical: 20,
-    marginLeft: 100,
     color: '#000',
   },
   icon: {

@@ -1,5 +1,5 @@
-// AppNavigator.tsx
-import React from 'react';
+import React, { useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import Timeline from './Timeline';
 import ProfileScreen from './ProfileScreen';
@@ -7,31 +7,45 @@ import CustomDrawerContent from './CustomDrawerContent'; // Import the custom dr
 import CustomDrawerHeader from './CustomDrawerHeader'; // Import the custom drawer header component
 import UpdateProfileScreen from './UpdateProfileScreen';
 import PaymentsScreen from './PaymentsScreen';
+import InviteModal from './InviteModal'; // Import the InviteModal component
 import { useGlobalContext } from '../GlobalContext';
 
 const Drawer = createDrawerNavigator();
 
-const AppNavigator = () => {
+const MainDrawer = ({ toggleInviteModal }) => {
   const { username: loginUsername } = useGlobalContext();
-  return (
 
-      <Drawer.Navigator
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
-        screenOptions={{
-          header: (props) => <CustomDrawerHeader {...props} />, // Set the custom header component
-        }}
-      >
-        <Drawer.Screen name="Timeline" component={Timeline} />
-        <Drawer.Screen
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} toggleInviteModal={toggleInviteModal} />}
+      screenOptions={{
+        header: (props) => <CustomDrawerHeader {...props} />, // Set the custom header component
+      }}
+    >
+      <Drawer.Screen name="Timeline" component={Timeline} />
+      <Drawer.Screen
         name="Profile"
         component={ProfileScreen}
         initialParams={{ profileUsername: loginUsername }}
         options={{ headerShown: false }}
-        />
-        <Drawer.Screen name="Coins" component={PaymentsScreen}  options={{ headerShown: false }}  />
-        <Drawer.Screen name="Update Profile" component={UpdateProfileScreen} options={{ headerShown: false }}  />
-      </Drawer.Navigator>
+      />
+      <Drawer.Screen name="Coins" component={PaymentsScreen} options={{ headerShown: false }} />
+      <Drawer.Screen name="Update Profile" component={UpdateProfileScreen} options={{ headerShown: false }} />
+    </Drawer.Navigator>
+  );
+};
 
+const AppNavigator = () => {
+  const [inviteModalVisible, setInviteModalVisible] = useState(false);
+  const toggleInviteModal = () => {
+    setInviteModalVisible(!inviteModalVisible);
+  };
+
+  return (
+    <>
+      <MainDrawer toggleInviteModal={toggleInviteModal} />
+      <InviteModal visible={inviteModalVisible} onClose={toggleInviteModal} />
+    </>
   );
 };
 

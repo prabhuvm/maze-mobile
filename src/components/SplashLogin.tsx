@@ -5,6 +5,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
+import { updateDeviceToken, getToken } from '../notificationSetup';
+import { getDeviceToken } from 'react-native-device-info';
 
 const SplashLogin = () => {
   const navigation = useNavigation();
@@ -12,7 +14,7 @@ const SplashLogin = () => {
   const scale = useRef(new Animated.Value(0.5)).current;
   const textOpacity = useRef(new Animated.Value(1)).current;
   const [initialRoute, setInitialRoute] = useState('');
-  const { setAvatars, setAvatarDict, setAvatarId } = useGlobalContext();
+  const { setAvatars, setAvatarDict, setAvatarId, setDeviceToken, deviceId, deviceToken } = useGlobalContext();
 
   const prepareAndLoadTimeline = async () => {
     const accessToken = await AsyncStorage.getItem('accessToken');
@@ -39,7 +41,15 @@ const SplashLogin = () => {
 
   useEffect(() => {
     prepareAndLoadTimeline();
+    getToken(setDeviceToken);
   }, []);
+
+  useEffect(() => {
+    const notificationSetup = async () => {
+      updateDeviceToken(deviceId, deviceToken);
+    };  
+    notificationSetup();
+  }, [deviceId, deviceToken]);
 
   useEffect(() => {
     // Animate logo opacity, scale, and text opacity

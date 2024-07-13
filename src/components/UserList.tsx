@@ -23,10 +23,10 @@ const UserList: React.FC<UserListProps> = ({people}) => {
       });
     }, [people]);
 
-    const handleFollow = async(item) => {
+    const handleFollow = async(item, followtype) => {
       console.log("Calling follow with ", item)
       const accessToken = await AsyncStorage.getItem('accessToken');
-      apiClient.post(`/users/${username}/follow/`, {
+      apiClient.post(`/users/${username}/${followtype}/`, {
           username:item.username    
         }, { headers: { 
           Authorization: `Bearer ${accessToken}` 
@@ -70,7 +70,7 @@ const UserList: React.FC<UserListProps> = ({people}) => {
 
     const renderPerson = ({ item }) => (
         <View style={styles.itemContainer}>
-          <Image source={/*{ uri: item.image } */ require('../assets/images/human.jpeg')} style={styles.avatar} />
+          <Image source={item.profileIcon ? { uri: item.profileIcon } : require('../assets/images/human.jpeg')} style={styles.avatar} />
           <View style={styles.itemTextContainer}>
           <TouchableOpacity onPress={() => handleUserPress(item.username)}>
             <Text style={styles.itemName}>{item.name}</Text>
@@ -78,10 +78,10 @@ const UserList: React.FC<UserListProps> = ({people}) => {
             <Text style={styles.itemUsername}>@{item.username}</Text>
           </View>
           {item.username in followDetails && followDetails[item.username] 
-          ? <TouchableOpacity style={styles.button} onPress={() => handleFollow(item)}>
+          ? <TouchableOpacity style={styles.button} onPress={() => handleFollow(item, 'unfollow')}>
               <Text style={styles.addButtonText}>Following</Text>
             </TouchableOpacity> 
-          : <TouchableOpacity style={styles.button} onPress={() => handleFollow(item)}>
+          : <TouchableOpacity style={styles.button} onPress={() => handleFollow(item, 'follow')}>
               <Text style={styles.addButtonText}>Follow</Text>
             </TouchableOpacity>  }
         </View>
@@ -105,13 +105,14 @@ const UserList: React.FC<UserListProps> = ({people}) => {
       width: 50,
       height: 50,
       borderRadius: 25,
-      marginRight: 15,
+      marginLeft: 10,
     },
     button: {
       backgroundColor: '#E0E0E0',
       borderRadius: 20,
       paddingVertical: 5,
       paddingHorizontal: 15,
+      marginRight: 10,
     },
     addButtonText: {
       fontSize: 16,
@@ -137,7 +138,7 @@ const UserList: React.FC<UserListProps> = ({people}) => {
     itemContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 15,
+      marginBottom: 5,
     },
   });
 

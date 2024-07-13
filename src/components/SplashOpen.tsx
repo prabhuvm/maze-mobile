@@ -7,6 +7,7 @@ import { apiClient } from '../api/client'; // Import your API client
 import Svg, { Path } from 'react-native-svg';
 import { useGlobalContext } from '../GlobalContext';
 import DeviceInfo from 'react-native-device-info';
+import { updateDeviceToken, getToken } from '../notificationSetup';
 
 const SplashOpen = () => {
   const navigation = useNavigation();
@@ -15,7 +16,7 @@ const SplashOpen = () => {
   const svgDashOffset = useRef(new Animated.Value(1)).current;
   const svgOpacity = useRef(new Animated.Value(1)).current;
   const [initialRoute, setInitialRoute] = useState('');
-  const {deviceId, setDeviceId, setAccessToken, setRefreshToken, setUsername, setAvatars, setAvatarDict, setAvatarId} = useGlobalContext();
+  const {deviceId, deviceToken, setDeviceId, setDeviceToken, setAccessToken, setRefreshToken, setUsername, setAvatars, setAvatarDict, setAvatarId} = useGlobalContext();
 
   useEffect(() => {
     const fetchDeviceInfo = async () => {
@@ -26,7 +27,15 @@ const SplashOpen = () => {
    });
   }
   fetchDeviceInfo();
+  getToken(setDeviceToken);
 }, []);
+
+useEffect(() => {
+  const notificationSetup = async () => {
+    updateDeviceToken(deviceId, deviceToken);
+  };  
+  notificationSetup();
+}, [deviceId, deviceToken]);
 
   const prepareAndLoadTimeline = async() => {
     const accessToken = await AsyncStorage.getItem('accessToken');
@@ -133,7 +142,7 @@ const SplashOpen = () => {
           friction: 2,
           useNativeDriver: true,
         }),
-      ]).start(() => {
+      ]).start(() => {    
         // Navigate to the initial route after the animation
         setTimeout(() => navigation.navigate(initialRoute), 200);
       });

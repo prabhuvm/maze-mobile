@@ -5,12 +5,13 @@ import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { updateDeviceToken } from '../notificationSetup';
 
 const SplashSignup = () => {
   const navigation = useNavigation();
   const opacity = useRef(new Animated.Value(1)).current; // Initial opacity value: 1 (fully visible)
   const [initialRoute, setInitialRoute] = useState('');
-  const { setAvatars, setAvatarDict, setAvatarId } = useGlobalContext();
+  const { setAvatars, setAvatarDict, setAvatarId, deviceId, deviceToken } = useGlobalContext();
 
   const prepareAndLoadTimeline = async() => {
     const accessToken = await AsyncStorage.getItem('accessToken');
@@ -49,6 +50,13 @@ const SplashSignup = () => {
       setTimeout(() => navigation.navigate(initialRoute), 200);
     });
   }, [opacity, initialRoute, navigation]);
+
+  useEffect(() => {
+    const notificationSetup = async () => {
+      updateDeviceToken(deviceId, deviceToken);
+    };  
+    notificationSetup();
+  }, [deviceId, deviceToken]);
 
   return (
     <View style={styles.container}>

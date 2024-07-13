@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import messaging from '@react-native-firebase/messaging';
-import React, { useEffect,useState } from 'react';
+import React, {useEffect,useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from './components/LoginScreen';
@@ -8,13 +8,13 @@ import SignupStep1 from './components/SignupStep1';
 import SignupStep2 from './components/SignupStep2';
 import EligibilityScreen from './components/EligibilityScreen';
 import InterestsScreen from './components/InterestsScreen';
-import { GlobalProvider } from './GlobalContext';
+import { GlobalProvider, useGlobalContext } from './GlobalContext';
 import AppNavigator from './components/AppNavigator';
 import SplashOpen from './components/SplashOpen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import ResetPasswordModal from './components/ResetPasswordModal';
 import SearchScreen from './components/SearchScreen'
-import StoreScreen from './components/StoreScreen';
+import StoreScreen from './components/AvatarStoreScreen';
 import DetailsScreen from './components/DetailsScreen';
 import PaymentsScreen from './components/PaymentsScreen';
 import { ThemeProvider } from './styles/ThemeContext';
@@ -25,9 +25,17 @@ import ExploreScreen from './components/ExploreScreen';
 import NotificationScreen from './components/NotificationScreen';
 import MessageScreen from './components/MessageScreen';
 import ConnectionsScreen from './components/ConnectionsScreen';
-import CollectionsScreen from './components/CollectionsScreen';
-import { apiClient } from './api/client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import CollectionsScreen from './components/AvatarCollectionsScreen';
+import InviteModal from './components/InviteModal';
+
+import {
+  requestUserPermission,
+  getToken,
+  handleForegroundMessages,
+  handleBackgroundMessages,
+  handleNotificationOpenedApp,
+  getInitialNotification,
+} from './notificationSetup';
 
 const App = () => {
 
@@ -57,74 +65,48 @@ function Routes() {
     <Stack.Screen name="Message" component={MessageScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Connections" component={ConnectionsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Collections" component={CollectionsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="InviteModal" component={InviteModal} options={{ headerShown: false }}/>
   </Stack.Navigator>
   );
-}
-
+} 
+const {setDeviceToken, setMessages, setNotifications, selectedChat, setChatMessages} = useGlobalContext();
 
 useEffect(() => {
-  // Request permission for notifications
-  const requestUserPermission = async () => {
-    const authStatus = await messaging().requestPermission();
-    const enabled =
-      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-    if (enabled) {
-      console.log('Authorization status:', authStatus);
-    } else {
-      console.log('Notification permission denied');
-    }
-  };
-
-  const updateDeviceToken = async (deviceToken) => {
-    try {
-      const accessToken = AsyncStorage.getItem("accessToken")
-      console.log("##$#$#$#$#$# Calling device updated with ", accessToken);
-      const response = await apiClient.post(`/notifications/update_device_token/`,
-        {device_token: deviceToken},
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-          }
-        }
-      );
-
-      console.log(response.data);
-    } catch (error) {
-      console.error('Error1 in updating device token:', error);
-    }
-  };
-
   requestUserPermission();
+  getToken(setDeviceToken);
 
-  // Get the device token
-  messaging()
-    .getToken()
-    .then(token => {
-      console.log('################ Device FCM Token: ', token);
-      // Send this token to your backend server to store it
-      updateDeviceToken(token);
-    });
+//  const unsubscribeOnMessage = handleForegroundMessages(setNotifications, setMessages, selectedChat, setChatMessages);
+  handleBackgroundMessages(setNotifications, setMessages, selectedChat, setChatMessages);
+  handleNotificationOpenedApp(setNotifications, setMessages, selectedChat, setChatMessages);
+  getInitialNotification(setNotifications, setMessages, selectedChat, setChatMessages);
 
-  // Listen to whether the token changes
-  return messaging().onTokenRefresh(token => {
-    console.log('################ New Device FCM Token: ', token);
-    // Send this token to your backend server to store it 
-    updateDeviceToken(token);
+  // Listen for token refresh
+  const unsubscribeOnTokenRefresh = messaging().onTokenRefresh(token => {
+    console.log('New Device FCM Token:', token);
+    setDeviceToken(token);
   });
+
+  return () => {
+ //   unsubscribeOnMessage();
+    unsubscribeOnTokenRefresh();
+  };
 }, []);
 
   return (
     <GlobalProvider>
       <ThemeProvider>
-      <NavigationContainer>
-        <Routes/>
-      </NavigationContainer>
+        <NavigationContainer>
+          <Routes/>
+        </NavigationContainer>
       </ThemeProvider>
     </GlobalProvider>
   );
 };
 
-export default App;
+const AppWrapper = () => (
+  <GlobalProvider>
+    <App />
+  </GlobalProvider>
+);
+
+export default AppWrapper;

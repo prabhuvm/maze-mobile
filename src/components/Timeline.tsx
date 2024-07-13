@@ -30,7 +30,7 @@ const TimelineScreen = ({ navigation }) => {
   const [expandedPosts, setExpandedPosts] = useState<{ [key: number]: boolean }>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [availableAvatars, setAvailableAvatars] = useState<Avatar[]>([]);
-  const { avatarId, setAvatarId, avatars, setAvatars,  avatarDict, setAvatarDict} = useGlobalContext();
+  const { avatarId, setAvatarId, avatars, setAvatars,  avatarDict, setAvatarDict, deviceToken} = useGlobalContext();
 
   const handleHomePress = async () => {
     setPosts([]); // Clear the posts list before fetching new posts

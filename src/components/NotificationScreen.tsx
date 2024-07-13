@@ -1,8 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 import { apiClient } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useGlobalContext } from '../GlobalContext';
+import UserList from './UserList';
+import { Notification } from '../types';
 
 const notificationsToday = [
   {
@@ -14,74 +17,58 @@ const notificationsToday = [
   },
 ];
 
-const notificationsPrevious = [
-  {
-    id: '1',
-    title: 'LIVE: Cooper is live!',
-    description: 'By: @cooper | 9w',
-    time: '9w',
-    icon: require('../assets/test/bot-elonmusk.png'), // Placeholder for live icon
-  },
-  {
-    id: '2',
-    title: 'Profile views',
-    description: 'Views: 3 | 15w',
-    time: '15w',
-    icon: require('../assets/test/bot-taylorswift.png'), // Placeholder for profile views icon
-  },
-];
-
-const suggestedPeople = [
-  {
-    id: '1',
-    name: 'Sarah Berstein',
-    handle: '@sarah | Follow',
-    avatar: require('../assets/test/avatar-alyssa.png'),
-  },
-  {
-    id: '2',
-    name: 'Kendal Vashisht',
-    handle: '@kendal | Follow',
-    avatar: require('../assets/test/avatar-irene.png'),
-  },
-];
-
 const NotificationScreen = () => {
     const navigation = useNavigation();
+    const [suggestedPeople, setSuggestedPeople] = useState([]);
+    const[notificationsPrevious, setNotificationsPrevious] = useState<Notification[]>([]);
+    const {username, notifications, setNotifications} = useGlobalContext();
+    
     useEffect(() => {
-      const getNotifications = async () => { 
-        const accessToken = AsyncStorage.getItem("accessToken");
-      const response1 = await apiClient.get(`/notifications/`,
+      getSuggestedPeople();
+      getNotifications();
+    }, [])
+    
+    const getSuggestedPeople = async () => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      await apiClient.get(`/users/suggestions/`, 
+      { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}` 
+        } 
+      }).then(response => {
+        console.log("People suggestions: ", response.data);
+        setSuggestedPeople(response.data);
+      })
+      .catch(error => console.error('Error fetching people:', error));
+    };
+
+
+
+  const getNotifications = async () => { 
+        const accessToken = await AsyncStorage.getItem("accessToken");
+      const response = await apiClient.get(`/notifications/`,
       {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`
         }
       }
-    );}
-    getNotifications();
-    }) 
+    );
+
+    setNotifications(response.data.notifications);
+    setNotificationsPrevious(response.data.notificationsPrevious);
+    console.log("############# Notifications recieved: ", response.data)
+  }
+  
+
   const renderNotification = ({ item }) => (
     <View style={styles.notificationContainer}>
-      <Image source={item.icon} style={styles.notificationIcon} />
+      <Image source={item.icon ? { uri: item.icon } : require('../assets/images/human.jpeg')} style={styles.notificationIcon} />
       <View style={styles.notificationTextContainer}>
         <Text style={styles.notificationTitle}>{item.title}</Text>
-        <Text style={styles.notificationDescription}>{item.description}</Text>
+        <Text style={styles.notificationDescription}>{item.body}</Text>
       </View>
       <Text style={styles.notificationTime}>{item.time}</Text>
-    </View>
-  );
-
-  const renderSuggestedPerson = ({ item }) => (
-    <View style={styles.personContainer}>
-      <Image source={item.avatar} style={styles.personAvatar} />
-      <View style={styles.personTextContainer}>
-        <Text style={styles.personName}>{item.name}</Text>
-        <Text style={styles.personHandle}>{item.handle}</Text>
-      </View>
-      <TouchableOpacity style={styles.followButton}>
-        <Text style={styles.followButtonText}>Follow</Text>
-      </TouchableOpacity>
     </View>
   );
 
@@ -94,14 +81,14 @@ const NotificationScreen = () => {
         </TouchableOpacity>
           <Text style={styles.headerTitle}>All Activity</Text>
         </View>
-        <Text style={styles.sectionTitle}>Today</Text>
+        { notifications.length > 0 && <Text style={styles.sectionTitle}>Recent</Text> }
         <FlatList
-          data={notificationsToday}
+          data={notifications}
           keyExtractor={(item) => item.id}
           renderItem={renderNotification}
           horizontal={false}
         />
-        <Text style={styles.sectionTitle}>Previous</Text>
+        { notificationsPrevious.length > 0 && <Text style={styles.sectionTitle}>Previous</Text> }
         <FlatList
           data={notificationsPrevious}
           keyExtractor={(item) => item.id}
@@ -109,12 +96,9 @@ const NotificationScreen = () => {
           horizontal={false}
         />
         <Text style={styles.sectionTitle}>Suggested people to follow</Text>
-        <FlatList
-          data={suggestedPeople}
-          keyExtractor={(item) => item.id}
-          renderItem={renderSuggestedPerson}
-          horizontal={false}
-        />
+        <UserList
+          people={suggestedPeople}/>
+
       </ScrollView>
     </SafeAreaView>
   );

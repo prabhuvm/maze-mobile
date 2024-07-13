@@ -1,101 +1,139 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import messaging from '@react-native-firebase/messaging';
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TextInput, FlatList, TouchableOpacity, SafeAreaView, Modal, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, StyleSheet, TextInput, FlatList, TouchableOpacity, SafeAreaView, Modal, ScrollView, Keyboard } from 'react-native';
 import { apiClient } from '../api/client';
+import { useGlobalContext } from '../GlobalContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Message } from '../types';
+import { handleForegroundMessages } from '../notificationSetup';
 
-const messagesList = [
-    {
-      id: '1',
-      name: 'Elon Musk',
-      message: 'Hey, did you see the latest SpaceX launch?',
-      time: '2h',
-      avatar: require('../assets/test/avatar-jeffery.png'),
-    },
-    {
-      id: '2',
-      name: 'Jeff Bezos',
-      message: 'Hello, have you checked the latest Amazon stock price?',
-      time: '1d',
-      avatar: require('../assets/test/avatar-irene.png'),
-    },
-    {
-      id: '3',
-      name: 'Bill Gates',
-      message: 'Hi, do you want to join our charity event?',
-      time: '3d',
-      avatar: require('../assets/test/avatar-alyssa.png'),
-    },
-    {
-      id: '4',
-      name: 'Mark Zuckerberg',
-      message: 'Hey, let’s catch up over a VR coffee',
-      time: '1w',
-      avatar: require('../assets/test/bot-elonmusk.png'),
-    },
-    {
-      id: '5',
-      name: 'Sundar Pichai',
-      message: 'Hello, have you tried the latest Google Pixel phone?',
-      time: '2w',
-      avatar: require('../assets/test/bot-drphil.png'),
-    },
-  ];
-  
-  const chatMessages = [
-    {
-      id: '1',
-      sender: 'Francis',
-      text: 'Hey',
-      image: require('../assets/test/bot-drphil.png'),
-      time: '9:30 AM',
-      senderAvatar: require('../assets/test/avatar-jeffery.png'),
-    },
-    {
-      id: '2',
-      sender: 'Sarah',
-      text: 'For sure!',
-      time: '9:31 AM',
-      senderAvatar: require('../assets/test/avatar-jeffery.png'),
-    },
-    {
-      id: '3',
-      sender: 'Sarah',
-      text: "Don't forget to bring the documents.",
-      time: '9:32 AM',
-      senderAvatar: require('../assets/test/avatar-jeffery.png'),
-    },
-    {
-      id: '4',
-      sender: 'Francis',
-      text: 'Good',
-      time: '9:33 AM',
-      senderAvatar: require('../assets/test/avatar-jeffery.png'),
-    },
-  ];
-
-const ChatScreen = () => {
+const MessageScreen = () => {
     const navigation = useNavigation();
-  const [selectedChat, setSelectedChat] = useState(null);
+    const [newMessage, setNewMessage] = useState('');
+    const {messages, setMessages, selectedChat, setSelectedChat, selectedChatRef, chatMessages, setChatMessages, username, setNotifications} = useGlobalContext();
+    const [otherUser, setOtherUser] = useState('');
+    const [messageList, setMessageList] = useState<Message[]>([])
 
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
+
+    const route = useRoute();
+    const flatListRef = useRef(null);
+    const {fusername} = route.params
 
   useEffect(() => {
+    console.log("Triggered useEffect")
+    if(username != fusername) {
+      // setOtherUser(fusername);
+      setChatOpen(fusername);
+    } else {
+      setChatClose();
+    }
     fetchMessages();
-
-    const unsubscribe = messaging().onMessage(async remoteMessage => {
-      console.log('A new message arrived!', remoteMessage);
-      fetchMessages(); // Refresh messages when a new message arrives
-    });
-
-    return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    const unsubscribeOnMessage = handleForegroundMessages(setNotifications, setMessages, selectedChatRef, setChatMessages);
+
+    // Clean up the subscription on unmount
+    return () => unsubscribeOnMessage();
+  }, [selectedChatRef]); //TODO: move ref to value itself as trigger point is on value which should be available.
+
+  const toMessageList = () => { 
+    setMessageList(Object.values(messages));
+  }
+
+  useEffect(() => {
+    console.log("Triggered useEffect - messages")
+    toMessageList();
+  }, [messages]);
+
+  // Scroll to end when modal opens
+  useEffect(() => {
+    console.log("Triggered useEffect - selectedChat")
+    if (selectedChat && flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [selectedChat]);
+
+  // Scroll to end when a new message is added
+  useEffect(() => {
+    console.log("Triggered useEffect - chatMessages ")
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [chatMessages]);
+
+
+
+  const handleSearch = async () => {
+    console.log("Handling search for ", searchQuery);
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.get(`/users/search/`, 
+    { 
+      params: { keywords:searchQuery }, 
+      headers: { 
+        Authorization: `Bearer ${accessToken}` 
+      } 
+    }).then(response => {
+      console.log("Chat Search results: ", response.data);
+      const filteredResults = response.data.filter(item => item.username !== username);
+      setSearchResults(filteredResults);
+      setSearchQuery('');
+      setIsSearchModalVisible(true);
+    })
+    .catch(error => console.error('Error fetching people:', error));
+  };
+
+  const handleSelectName = (name) => {
+    setChatOpen(name);
+    setIsSearchModalVisible(false);
+    // Open chat window logic here
+    console.log(`Chat window opened for ${name}`);
+  };
+
+
+  const fetchChatMessages = async (name) => {
+    try {
+      const accessToken = await AsyncStorage.getItem("accessToken");
+      const response = await apiClient.get(`/notifications/messages/${name}`, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+      console.log("Chat Messages fetched: ", response.data);
+      setChatMessages(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   const fetchMessages = async () => {
     try {
-      const response = await apiClient.get('/notifications/messages/');
-      setMessages(response.data);
+      const accessToken = await AsyncStorage.getItem("accessToken");
+      const response = await apiClient.get('/notifications/messages/', 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
+      );
+      console.log("Messages fetched: ", response.data);
+
+      const messageDictionary = response.data.reduce((acc, message) => {
+        if (!acc[message.username] || acc[message.username].id <= message.id) {
+          acc[message.username] = message;
+        }
+        return acc;
+      }, {});
+      setMessages(messageDictionary);
+
     } catch (error) {
       console.error(error);
     }
@@ -103,21 +141,83 @@ const ChatScreen = () => {
 
   const sendMessage = async () => {
     try {
+      const accessToken = await AsyncStorage.getItem("accessToken");
       const response = await apiClient.post('/notifications/messages/send/', {
-        receiver: 'receiver_username', // Replace with dynamic receiver
+        receiver: otherUser, 
         content: newMessage,
+      }, 
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
       setNewMessage('');
-      fetchMessages(); // Refresh messages after sending
+
+      const messageToUpdate = 
+      {avatar: "", 
+        id: messages[otherUser] ? messages[otherUser].id + 1 : 1, 
+        message: newMessage, 
+        name: messages[otherUser] ? messages[otherUser].name : otherUser, 
+        sender: username, 
+        time: "0m", 
+        username: otherUser
+      }
+
+
+      setMessages(prevMessages => {
+        const existingMessage = prevMessages[messageToUpdate.username];
+        // Check if the message should be updated based on the id
+        if (!existingMessage || existingMessage.id <= messageToUpdate.id) {
+          return {
+            ...prevMessages,
+            [messageToUpdate.username]: messageToUpdate,
+          };
+        }
+        // Return the previous state if no update is needed
+        return prevMessages;
+      });
+
+      
+      if(selectedChat.trim() == messageToUpdate.username) {
+        console.log("New arrived message: ", messageToUpdate);
+        setChatMessages(prevMessages => [
+          ...prevMessages,
+          messageToUpdate,
+        ]);
+      }
+
+
+     // fetchMessages(); // Refresh messages after sending
     } catch (error) {
       console.error(error);
     }
   };
 
+  const setChatClose = () => {
+    console.log("Closing chat screen for ###$ ", selectedChat)
+    setOtherUser('');
+    setSelectedChat('');
+    setChatMessages([]);
+  };
+
+  const setChatOpen = async (name) => {
+    console.log("Opening chat screen for ###$ ", name); //TODO: Strange removing this causing issue.
+    setOtherUser(name);
+    setSelectedChat(name);
+    fetchChatMessages(name);
+  };
+
+  const closeMessageScreen = () => {
+    console.log("Closing message screen")
+    setChatClose();
+    navigation.goBack();
+  }
+
 
   const renderMessageItem = ({ item }) => (
-    <TouchableOpacity style={styles.messageItem} onPress={() => setSelectedChat(item)}>
-      <Image source={item.avatar} style={styles.messageAvatar} />
+    <TouchableOpacity style={styles.messageItem} onPress={() => setChatOpen(item.username)}>
+      <Image source={item.avatar ? { uri: item.avatar } :require('../assets/images/human.jpeg')} style={styles.messageAvatar} />
       <View style={styles.messageTextContainer}>
         <Text style={styles.messageName}>{item.name}</Text>
         <Text style={styles.messageText}>{item.message}</Text>
@@ -127,32 +227,36 @@ const ChatScreen = () => {
   );
 
   const renderChatMessageItem = ({ item }) => (
-    <View style={[styles.chatMessageItem, item.sender === 'Francis' ? styles.sentMessage : styles.receivedMessage]}>
+    <View style={[styles.chatMessageItem, item.sender === username ? styles.sentMessage : styles.receivedMessage]}>
       {item.image && <Image source={item.image} style={styles.chatImage} />}
-      <Text style={styles.chatMessageText}>{item.text}</Text>
+      <Text style={[styles.chatMessageText, item.sender === username ? styles.sentMessageText : styles.receivedMessageText]}>{item.message}</Text>
       <Text style={styles.chatMessageTime}>{item.time}</Text>
-      <Image source={item.senderAvatar} style={styles.chatMessageAvatar} />
+      <Image source={item.senderAvatar ? { uri: item.senderAvatar } : require('../assets/images/human.jpeg')} style={styles.chatMessageAvatar} />
     </View>
   );
-
-  const closeModal = () => {
-    setSelectedChat(null);
-  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>{selectedChat ? 'Chat' : 'Messages'}</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => closeMessageScreen()}>
             <Text style={styles.modalCloseButton}>Close</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.searchContainer}>
-        <TextInput style={styles.searchInput} placeholder="Search" />
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Find People"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+      <TouchableOpacity style={styles.goButton} onPress={handleSearch}>
+          <Text style={styles.goButtonText}>Go</Text>
+        </TouchableOpacity>
       </View>
       <FlatList
-        data={messagesList}
-        keyExtractor={(item) => item.id}
+        data={messageList}
+        keyExtractor={(item) => item.username}
         renderItem={renderMessageItem}
         style={styles.messagesList}
       />
@@ -161,17 +265,18 @@ const ChatScreen = () => {
           animationType="slide"
           transparent={true}
           visible={!!selectedChat}
-          onRequestClose={closeModal}
+          onRequestClose={setChatClose}
         >
           <View style={styles.modalBackground}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={closeModal}>
+                <TouchableOpacity onPress={setChatClose}>
                   <Text style={styles.modalCloseButton}>Close</Text>
                 </TouchableOpacity>
-                <Text style={styles.modalTitle}>Chat with {selectedChat.name}</Text>
+                <Text style={styles.modalTitle}>Chat with {otherUser}</Text>
               </View>
               <FlatList
+                ref={flatListRef}
                 data={chatMessages}
                 keyExtractor={(item) => item.id}
                 renderItem={renderChatMessageItem}
@@ -190,6 +295,31 @@ const ChatScreen = () => {
           </View>
         </Modal>
       )}
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isSearchModalVisible}
+        onRequestClose={() => setIsSearchModalVisible(false)}
+      >
+        <View style={styles.searchModalBackground}>
+          <View style={styles.searchModalContainer}>
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item) => item.username}
+              renderItem={({ item }) => (
+                <TouchableOpacity style={styles.resultItem} onPress={() => handleSelectName(item.username)}>
+                  <Text>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+            <TouchableOpacity onPress={() => setIsSearchModalVisible(false)}>
+              <Text style={styles.closeButton}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 };
@@ -220,14 +350,32 @@ const styles = StyleSheet.create({
     tintColor: '#000',
   },
   searchContainer: {
-    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F3F3',
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    marginBottom: 10,
   },
   searchInput: {
+    flex: 1, 
     backgroundColor: '#F0F0F0',
     borderRadius: 10,
     padding: 10,
     fontSize: 16,
   },
+
+  goButton: {
+    backgroundColor: '#333',
+    padding: 10,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+  goButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+
   messagesList: {
     flex: 1,
   },
@@ -270,7 +418,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 10,
-    height: '50%',
+    height: '95%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -299,6 +447,12 @@ const styles = StyleSheet.create({
   receivedMessage: {
     alignItems: 'flex-start',
   },
+  sentMessageText: {
+    borderRadius: 8,
+    backgroundColor: '#E0E0E0',
+  },
+  receivedMessageText: {
+  },
   chatImage: {
     width: 200,
     height: 100,
@@ -306,6 +460,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   chatMessageText: {
+    padding:10,
     fontSize: 16,
     color: '#000',
   },
@@ -339,6 +494,27 @@ const styles = StyleSheet.create({
     tintColor: '#000',
     marginLeft: 10,
   },
+
+  searchModalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  searchModalContainer: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+  },
+  resultItem: {
+    padding: 10,
+  },
+  closeButton: {
+    marginTop: 10,
+    textAlign: 'center',
+    color: 'blue',
+  },
 });
 
-export default ChatScreen;
+export default MessageScreen;
