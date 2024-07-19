@@ -2,18 +2,24 @@ import React, { useState } from 'react';
 import { View, TextInput, Modal, StyleSheet, Text, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PostModal = ({ visible, onClose, addPost, navigation }) => {
   const [text, setText] = useState('');
   const { username, avatarId, avatarDict } = useGlobalContext();
 
-  const handleSubmit = () => {
+  const handleSubmit = async() => {
     const query = text;
     setText('');
     console.log("POST: Executing query with ", `posts/${username}/${avatarId}/`, " for ", query);
     onClose();
     if (query.trim()) {
-      apiClient.post(`posts/${username}/${avatarId}/`, { question: query })
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      apiClient.post(`posts/${username}/${avatarId}/`, { question: query }, 
+        { headers: { 
+          Authorization: `Bearer ${accessToken}` 
+       }}
+      )
         .then(response => {
           console.log("Received Response is: ", response.data);
           addPost(response.data);

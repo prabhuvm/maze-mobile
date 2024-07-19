@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Linking, Alert, Modal,Clipboard } from 'react-native';
 
 const InviteModal = ({ visible, onClose }) => {
-  const message = 'Check out this awesome app!';
+  const message = 'Check out this awesome app! Visit https://maze.social/';
 
   const inviteViaWhatsApp = () => {
     const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
