@@ -1,37 +1,110 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { apiClient } from '../api/client';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useGlobalContext } from '../GlobalContext';
 
 const DetailsScreen = ({ route }) => {
   const navigation = useNavigation();
   const { bot } = route.params;
-  const showStartChat = bot.showStartChat; // Assume this value comes from the bot object
+  const {username} = useGlobalContext();
+  const [botAdded, setBotAdded] = useState(false);  //ToDo : move this to common
+  const showStartChat = true;//bot.showStartChat; // Assume this value comes from the bot object
+
+
+  useEffect(() => {
+    const fetchCollections = async() => { //TODO: Move this to common
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      await apiClient.get(`/users/${username}/agents/`,  
+        { headers: { 
+          Authorization: `Bearer ${accessToken}` 
+       }})
+        .then(response => {
+          console.log("## Agents recieved: ", response.data);
+          console.log("## Current agent: ", bot.id)
+
+          const botDictionary = response.data.reduce((acc, avatar) => {
+            console.log("@@ Adding ", avatar.id);
+            acc[avatar.id] = avatar;
+            return acc;
+          }, {});
+
+          setBotAdded(bot.id in botDictionary);
+        })
+        .catch(error => {
+          console.error('Error following:', error);
+        });
+    }
+    fetchCollections();
+  }, []);
+
+  const gotToChat = (id : string) => {
+    navigation.navigate("AvatarChat", {bot : bot});
+  }
+
+  const addToCollection = async() => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.post(`/users/${username}/agents/`, {
+        agent:bot.id
+      }, { headers: { 
+        Authorization: `Bearer ${accessToken}` 
+     }})
+      .then(response => {
+        setBotAdded(true);
+        console.log('Added successfully!'); //Todo: change button to Remove and also implement delete function.
+      })
+      .catch(error => {
+        console.error('Error following:', error);
+      });
+  }
+
+
+  const removeFromCollection = async() => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    await apiClient.delete(`/users/${username}/agents/${bot.id}`, 
+      { headers: { 
+        Authorization: `Bearer ${accessToken}` 
+     }})
+      .then(response => {
+        setBotAdded(false);
+        console.log('Removed successfully!'); //Todo: change button to Remove and also implement delete function.
+      })
+      .catch(error => {
+        console.error('Error following:', error);
+      });
+  }
 
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
         </TouchableOpacity>
-      <Image source={{ uri: bot.image }} style={styles.botImage} />
+      <Image source={{ uri: bot.app_screenshot_url }} style={styles.botImage} />
       <Text style={styles.botName}>{bot.name}</Text>
       <Text style={styles.botDescription}>{bot.description}</Text>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.actionButton, !showStartChat && styles.fullWidthButton]}>
+        {botAdded == true ? 
+        (<TouchableOpacity style={styles.actionButton} onPress={() => removeFromCollection()} >
+            <Text style={styles.actionButtonText}>Remove from Collection</Text>
+          </TouchableOpacity>) : 
+          (<TouchableOpacity style={styles.actionButton} onPress={() => addToCollection()} >
           <Text style={styles.actionButtonText}>Add to Collection</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>)}
+
         {showStartChat && (
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity onPress={gotToChat} style={styles.actionButton}>
             <Text style={styles.actionButtonText}>Start Chat</Text>
           </TouchableOpacity>
         )}
       </View>
       <Text style={styles.specificationsTitle}>Specifications</Text>
       <View style={styles.specificationsContainer}>
-        {bot.specifications.map((spec, index) => (
+        {/* {bot.specifications.map((spec, index) => (
           <View key={index} style={styles.specification}>
             <Text style={styles.specificationText}>{spec}</Text>
           </View>
-        ))}
+        ))} */}
       </View>
     </ScrollView>
   );

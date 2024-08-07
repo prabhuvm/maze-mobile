@@ -1,46 +1,75 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
+import { apiClient } from '../api/client';
+import { useGlobalContext } from '../GlobalContext';
 
-const avatars = [
-  {
-    id: '1',
-    username: 'BrainBot',
-    image: require('../assets/test/bot-drphil.png'), // Placeholder for avatar image
-  },
-  {
-    id: '2',
-    username: 'SuitBot',
-    image: require('../assets/test/bot-elonmusk.png'), // Placeholder for avatar image
-  },
-  {
-    id: '3',
-    username: 'NatureBot',
-    image: require('../assets/test/bot-taylorswift.png'), // Placeholder for avatar image
-  },
-];
 
-const AvatarItem = ({ item }) => (
-  <View style={styles.avatarContainer}>
-    <View style={styles.avatarImageWrapper}>
-      <Image source={item.image} style={styles.avatarImage} />
-      <View style={styles.usernameOverlay}>
-        <Text style={styles.avatarUsername}>{item.username}</Text>
-      </View>
-    </View>
-    <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Add</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.chatButton}>
-        <Text style={styles.chatButtonText}>Chat</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
+
 
 const CollectionsScreen = () => {
   const navigation = useNavigation();
+  const [agents, setAgents] = useState([]);
+  const [botDict, setBotDict] = useState({});
+  const {username} = useGlobalContext();
+
+
+  const showDetails = (id : string) => {
+    navigation.navigate("Details", {bot : botDict[id]});
+  }
+  
+
+  const gotToChat = (item) => {
+    navigation.navigate("AvatarChat", {bot : item});
+  }
+
+  const AgentItem = ({ item }) => (
+    <View style={styles.avatarContainer}>
+      <View style={styles.avatarImageWrapper}>
+      <TouchableOpacity onPress={() => showDetails(item.id)}>
+        <Image source={{ uri: item.app_screenshot_url }} style={styles.avatarImage} />
+        </TouchableOpacity> 
+        <View style={styles.usernameOverlay}>
+          <Text style={styles.avatarUsername}>{item.name}</Text>
+        </View>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.addButton}>
+          <Text style={styles.addButtonText}>Add to Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.chatButton} onPress={() => gotToChat(item)}>
+          <Text style={styles.chatButtonText}>Chat</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  useEffect(() => {
+    const fetchCollections = async() => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      await apiClient.get(`/users/${username}/agents/`,  
+        { headers: { 
+          Authorization: `Bearer ${accessToken}` 
+       }})
+        .then(response => {
+          console.log("Agents recieved: ", response.data);
+          setAgents(response.data);
+
+          const botDictionary = response.data.reduce((acc, avatar) => {
+            acc[avatar.id] = avatar;
+            return acc;
+          }, {});
+          setBotDict(botDictionary); // Update avatarDict state
+
+        })
+        .catch(error => {
+          console.error('Error following:', error);
+        });
+    }
+    fetchCollections();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
@@ -50,8 +79,8 @@ const CollectionsScreen = () => {
         </TouchableOpacity>
       </View>
       <ScrollView style={styles.scrollView}>
-        {avatars.map((avatar) => (
-          <AvatarItem key={avatar.id} item={avatar} />
+        {agents.map((agent) => (
+          <AgentItem key={agent.id} item={agent} />
         ))}
       </ScrollView>
       <View style={styles.closeButtonContainer}>

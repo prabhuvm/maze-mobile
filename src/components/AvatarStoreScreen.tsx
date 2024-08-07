@@ -1,56 +1,58 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
-
-const bots = [
-  { id: '1', name: 'Art Bot', description: 'Create art with AI', price: 'Free', image: 'path-to-art-bot-image' },
-  { id: '2', name: 'Music Bot', description: 'Create music with AI', price: 'Free', image: 'path-to-music-bot-image' },
-  { id: '3', name: 'Video Bot', description: 'Create videos with AI', price: 'Free', image: 'path-to-video-bot-image' },
-  { id: '4', name: 'T-Shirt Bot', description: 'Create t-shirt designs with AI', price: 'Free', image: 'path-to-tshirt-bot-image' },
-  { id: '5', name: 'Logo Bot', description: 'Create logos with AI', price: 'Free', image: 'path-to-logo-bot-image' },
-  { id: '6', name: 'Book Cover Bot', description: 'Create book covers with AI', price: 'Free', image: 'path-to-bookcover-bot-image' },
-];
-
-const params = [
-  {
-    name: 'Space Explorer',
-    description: 'A bot designed to provide users with the latest news and updates on all things space.',
-    image: 'https://example.com/path-to-space-explorer-image.jpg', // Replace with a valid image URL
-    showStartChat: true, // Set to false if "Start Chat" button should not be displayed
-    specifications: ['Astronomy', 'Telescope', 'Spacecraft', 'Exoplanets', 'Galaxies']
-  },
-  {
-    name: 'Space Explorer',
-    description: 'A bot designed to provide users with the latest news and updates on all things space.',
-    image: 'https://example.com/path-to-space-explorer-image.jpg', // Replace with a valid image URL
-    showStartChat: false, // Set to false if "Start Chat" button should not be displayed
-    specifications: ['Astronomy', 'Telescope', 'Spacecraft', 'Exoplanets', 'Galaxies']
-  }
-]
-
+import { apiClient } from '../api/client';
+import { useGlobalContext } from '../GlobalContext';
 
 const StoreScreen = () => {
   const navigation = useNavigation();
+  const [bots, setBots] = useState([]);
+  const [botDict, setBotDict] = useState({});
+  const {username} = useGlobalContext();
+
+  useEffect(() => {
+    const avatarAgents = async() => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      await apiClient.get('/avatars/agents/', { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}` 
+        }
+      }).then(response => {
+          console.log("Avatar Agents:", response.data); // Debugging line
+          setBots(response.data);
+  
+          const botDictionary = response.data.reduce((acc, avatar) => {
+            acc[avatar.id] = avatar;
+            return acc;
+          }, {});
+          setBotDict(botDictionary); // Update avatarDict state
+        })
+        .catch(error => console.error(error));
+    }
+
+    avatarAgents();
+  }, []);
 
   const showDetails = (id : string) => {
-    const idx = +id % 2;
-    navigation.navigate("Details", {bot : params[idx]});
+    navigation.navigate("Details", {bot : botDict[id]});
   }
+
   const renderBot = ({ item }) => (
     <View style={styles.botContainer}>
       <TouchableOpacity onPress={() => showDetails(item.id)}>
-        <Image source={{ uri: item.image }} style={styles.botImage} />
+        <Image source={{ uri: item.app_screenshot_url }} style={styles.botImage} />
       </TouchableOpacity>
       
       <View style={styles.botDetails}>
         <TouchableOpacity onPress={() => showDetails(item.id)}>
           <Text style={styles.botName}>{item.name}</Text>
         </TouchableOpacity> 
-        <Text style={styles.botDescription}>{item.description}</Text>
+        <Text style={styles.botDescription}>{item.summary}</Text>
         <View style={styles.priceAndButtonContainer}>
-          <Text style={styles.botPrice}>{item.price}</Text>
-          <TouchableOpacity style={styles.addButton}>
-            <Text style={styles.addButtonText}>Add</Text>
+          {/* <Text style={styles.botPrice}>{item.price}</Text> */}
+          <TouchableOpacity style={styles.addButton} onPress={() => showDetails(item.id)} >
+            <Text style={styles.addButtonText}>Show Details</Text>
           </TouchableOpacity>
         </View>
       </View>

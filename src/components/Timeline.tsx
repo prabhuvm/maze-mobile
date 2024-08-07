@@ -1,12 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Modal, Button } from 'react-native';
 import { apiClient } from '../api/client';
-import PostItem from './PostItem';
+import PostSummary from './posts/PostSummary';
 import AvatarList from './AvatarList';
 import Footer from './Footer';
 import { useGlobalContext } from '../GlobalContext';
 import { Avatar } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const samplePost = {
+  postid: 1,
+  username: 'JohnDoe',
+  handle: '@johndoe',
+  date: '2023-08-06T14:48:00.000Z',
+  content: 'This is a sample post content.',
+  images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+  videos: [],
+  audios: [],
+  avatar: 'https://example.com/avatar.jpg',
+  comments: 10,
+  likes: 25,
+  shares: 5,
+  creator: {
+    username: 'JaneDoe',
+    profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png',
+  },
+  participants: [
+    { username: 'Alice', profile_img: 'https://picsum.photos/id/237/200/300' },
+    { username: 'Bob', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'Charlie', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'David', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'Eve', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'Frank', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+  ],
+};
 
 interface Post {
   postid: number;
@@ -81,7 +108,8 @@ const TimelineScreen = ({ navigation }) => {
       })
       .then(response => {
         console.log("###################### Fetched posts:", response.data); // Debugging line
-        setPosts(response.data);
+        //setPosts(response.data);
+        setPosts([samplePost])
         setAvatarId(id);
         setIsExpanded(false);
         clearTimeout(timer);
@@ -152,7 +180,7 @@ const TimelineScreen = ({ navigation }) => {
   };
 
   const renderPost = ({ item }: { item: Post }) => (
-    <PostItem
+    <PostSummary
       post={item}
       isExpanded={!!expandedPosts[item.postid]}
       toggleExpand={toggleExpand}
