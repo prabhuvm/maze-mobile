@@ -61,12 +61,15 @@ const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
             const originalFetch = window.fetch;
             window.fetch = async function(url, options) {
               return new Promise((resolve, reject) => {
+                const { method = 'GET', headers = {}, body = null } = options || {};
                 window.ReactNativeWebView.postMessage(JSON.stringify({
                   type: 'FETCH_REQUEST',
                   url: url,
-                  options: options
+                  method: method,
+                  headers: headers,
+                  body: body
                 }));
-                
+
                 window.addEventListener('message', function responseHandler(event) {
                   const data = JSON.parse(event.data);
                   if (data.type === 'FETCH_RESPONSE') {
@@ -122,8 +125,13 @@ const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
   const onMessage = async (event) => {
     const data = JSON.parse(event.nativeEvent.data);
     if (data.type === 'FETCH_REQUEST') {
+      const { url, method, headers, body } = data;
       try {
-        const response = await fetch(data.url, data.options);
+        const response = await fetch(url, {
+          method: method || 'GET',
+          headers: headers || {},
+          body: body || null
+        });
         const responseBody = await response.text();
         const responseHeaders = {};
         response.headers.forEach((value, key) => {
