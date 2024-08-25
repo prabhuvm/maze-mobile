@@ -34,6 +34,7 @@ const CustomDrawerContent = ({ toggleInviteModal, ...props }) => (
       <Image source={require('../assets/icons/coins.png')} style={styles.icon} />
       <Text style={styles.menuItemText}>Coins</Text>
     </TouchableOpacity>
+
     <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Update Profile')}>
       <Image source={require('../assets/icons/edit.png')} style={styles.icon} />
       <Text style={styles.menuItemText}>Update Profile</Text>

@@ -38,7 +38,7 @@ const Footer = ({ navigation, addPost, homeFn }) => {
     <>
       <View style={[styles.footerContainer, { backgroundColor: theme.background }]}>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Collections')}>
-          <Image source={require('../assets/icons/robocall.png')} style={styles.icon} />
+          <Image source={require('../assets/icons/robo.png')} style={styles.icon} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Store')}>
           <Image source={require('../assets/icons/store.png')} style={styles.icon} />

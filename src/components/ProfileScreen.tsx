@@ -118,6 +118,7 @@ const ProfileScreen = () => {
           Authorization: `Bearer ${accessToken}` 
         } 
         });
+        console.log("Profile pic for user: ", response.data.url);
       setProfilePic({ uri: response.data.url });
     } catch (error) {
       console.error('Failed to fetch profile picture', error);

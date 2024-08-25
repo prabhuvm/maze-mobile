@@ -22,10 +22,11 @@ const samplePost = {
   likes: 25,
   shares: 5,
   creator: {
-    username: 'JaneDoe',
-    profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png',
+    username: 'shilpa',
+    profile_img: 'https://d391oeqqigkdbo.cloudfront.net/profile-pic/shilpa/shilpa_ipdgacAp.jpg',
   },
   participants: [
+    { username: 'JaneDoe', profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png' },
     { username: 'Alice', profile_img: 'https://picsum.photos/id/237/200/300' },
     { username: 'Bob', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
     { username: 'Charlie', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
@@ -63,16 +64,20 @@ const TimelineScreen = ({ navigation }) => {
     setPosts([]); // Clear the posts list before fetching new posts
     console.log("################# Fetching posts for Home: ", avatarId); // Debugging line
     const accessToken = await AsyncStorage.getItem('accessToken');
-    apiClient.get(`/posts/${avatarId}/`, { 
-      headers: { 
-        Authorization: `Bearer ${accessToken}` 
-      } 
-      })
-      .then(response => {
-        console.log("Fetched posts for Home:", response.data); // Debugging line
-        setPosts(response.data);
-      })
-      .catch(error => console.error(error));
+    if(avatarId == 36) {  //TODO: Remove later - test with gemini for post ux
+      setPosts([samplePost])
+    } else {
+        apiClient.get(`/posts/${avatarId}/`, { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}` 
+        } 
+        })
+        .then(response => {
+          console.log("Fetched posts for Home:", response.data); // Debugging line
+          setPosts(response.data);
+        })
+        .catch(error => console.error(error));
+    }
   };
 
   useEffect(() => {
@@ -101,20 +106,27 @@ const TimelineScreen = ({ navigation }) => {
     console.log("######### Avatar :", avatarDict[avatarId]);
 
     const accessToken = await AsyncStorage.getItem('accessToken');
-    apiClient.get(`/posts/${id}`, { 
-      headers: { 
-        Authorization: `Bearer ${accessToken}` 
-      } 
-      })
-      .then(response => {
-        console.log("###################### Fetched posts:", response.data); // Debugging line
-        //setPosts(response.data);
-        setPosts([samplePost])
-        setAvatarId(id);
-        setIsExpanded(false);
-        clearTimeout(timer);
-      })
-      .catch(error => console.error(error));
+    if(id == 36) { //TODO: Remove later - test with gemini for post ux
+      setPosts([samplePost])
+      setAvatarId(id);
+      setIsExpanded(false);
+      clearTimeout(timer);
+    } else {
+      apiClient.get(`/posts/${id}`, { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}` 
+        } 
+        })
+        .then(response => {
+          console.log("###################### Fetched posts:", response.data); // Debugging line
+          setPosts(response.data);
+          setAvatarId(id);
+          setIsExpanded(false);
+          clearTimeout(timer);
+        })
+        .catch(error => console.error(error));
+    }
+    
   };
 
   const handleAddPress = () => {

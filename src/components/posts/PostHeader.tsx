@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { format, isToday, isThisYear, parseISO } from 'date-fns';
+import PostUsersModal from './PostUsersModal';
 
 interface PostHeaderProps {
   username: string;
@@ -16,13 +17,13 @@ interface PostHeaderProps {
   }>;
 }
 
-const ParticipantsStack: React.FC<{ creator?: any; participants?: any[] }> = ({ creator, participants = [] }) => {
+const ParticipantsStack: React.FC<{ creator?: any; participants?: any[]; onPress: () => void }> = ({ creator, participants = [], onPress }) => {
   const maxVisibleParticipants = 4;
   const displayedParticipants = participants.slice(0, maxVisibleParticipants);
   const extraParticipants = participants.length - maxVisibleParticipants;
 
   return (
-    <View style={styles.stackContainer}>
+    <TouchableOpacity onPress={onPress} style={styles.stackContainer}>
       <Image
         source={{ uri: creator.profile_img }}
         style={[styles.participantImage, { left: 0, zIndex: displayedParticipants.length + 1 }]}
@@ -39,11 +40,13 @@ const ParticipantsStack: React.FC<{ creator?: any; participants?: any[] }> = ({ 
           <Text style={styles.extraParticipantsText}>+{extraParticipants}</Text>
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const PostHeader: React.FC<PostHeaderProps> = ({ username, date, avatar, creator, participants = [] }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = parseISO(dateString);
     if (isToday(date)) {
@@ -58,18 +61,30 @@ const PostHeader: React.FC<PostHeaderProps> = ({ username, date, avatar, creator
   const hasCreatorOrParticipants = creator || (participants && participants.length > 0);
 
   return (
-    <View style={styles.postHeader}>
-      <Image style={styles.avatar} source={require('../../assets/images/robot.gif')} />
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{username}</Text>
-        <Text style={styles.postDate}>{formatDate(date)}</Text>
-      </View>
-      {hasCreatorOrParticipants && (
-        <View style={styles.participantsContainer}>
-          <Text style={styles.withText}>with</Text>
-          <ParticipantsStack creator={creator} participants={participants} />
+    <View>
+      <View style={styles.postHeader}>
+        <Image style={styles.avatar} source={require('../../assets/images/robot.gif')} />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>{username}</Text>
+          <Text style={styles.postDate}>{formatDate(date)}</Text>
         </View>
-      )}
+        {hasCreatorOrParticipants && (
+          <View style={styles.participantsContainer}>
+            <Text style={styles.withText}>with</Text>
+            <ParticipantsStack
+              creator={creator}
+              participants={participants}
+              onPress={() => setModalVisible(true)}
+            />
+          </View>
+        )}
+      </View>
+      <PostUsersModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        creator={creator}
+        participants={participants}
+      />
     </View>
   );
 };
@@ -87,7 +102,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   userInfo: {
-    flex: 1,
+    flexDirection: 'column',
+    marginRight: 10,
   },
   userName: {
     fontSize: 15,
@@ -101,9 +117,6 @@ const styles = StyleSheet.create({
   participantsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
-    marginRight: 40,
-    paddingRight: 20,
   },
   withText: {
     fontStyle: 'italic',
@@ -112,19 +125,20 @@ const styles = StyleSheet.create({
   stackContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginLeft: 5,
   },
   participantImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     borderWidth: 2,
     borderColor: '#fff',
     position: 'absolute',
   },
   extraParticipants: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',

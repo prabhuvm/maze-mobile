@@ -28,6 +28,7 @@ import MessageScreen from './components/MessageScreen';
 import ConnectionsScreen from './components/ConnectionsScreen';
 import CollectionsScreen from './components/AvatarCollectionsScreen';
 import InviteModal from './components/InviteModal';
+import GameScreen from './components/apps/GameScreen';
 
 import {
   requestUserPermission,
@@ -60,6 +61,7 @@ function Routes() {
     <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: true }} />
     <Stack.Screen name="Store" component={StoreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Details" component={DetailsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="GameScreen" component={GameScreen} options={{ headerShown: false }} />
     <Stack.Screen name="AvatarChat" component={AvatarChatScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Explore" component={ExploreScreen} options={{ headerShown: false }} />

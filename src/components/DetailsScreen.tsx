@@ -10,7 +10,6 @@ const DetailsScreen = ({ route }) => {
   const { bot } = route.params;
   const {username} = useGlobalContext();
   const [botAdded, setBotAdded] = useState(false);  //ToDo : move this to common
-  const showStartChat = true;//bot.showStartChat; // Assume this value comes from the bot object
 
 
   useEffect(() => {
@@ -40,7 +39,12 @@ const DetailsScreen = ({ route }) => {
   }, []);
 
   const gotToChat = (id : string) => {
-    navigation.navigate("AvatarChat", {bot : bot});
+    // console.log("Bot val: ", bot)
+    // if(bot.chat == 1) {
+    // navigation.navigate("AvatarChat", {bot : bot});
+    // } else {
+    navigation.navigate("GameScreen", {appId : bot.agent_id});
+
   }
 
   const addToCollection = async() => {
@@ -92,11 +96,9 @@ const DetailsScreen = ({ route }) => {
           <Text style={styles.actionButtonText}>Add to Collection</Text>
         </TouchableOpacity>)}
 
-        {showStartChat && (
-          <TouchableOpacity onPress={gotToChat} style={styles.actionButton}>
-            <Text style={styles.actionButtonText}>Start Chat</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={gotToChat} style={styles.actionButton}>
+          <Text style={styles.actionButtonText}>Run Application</Text>
+        </TouchableOpacity>
       </View>
       <Text style={styles.specificationsTitle}>Specifications</Text>
       <View style={styles.specificationsContainer}>
