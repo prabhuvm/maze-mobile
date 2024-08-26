@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
@@ -19,24 +19,35 @@ const UpdateProfileScreen = () => {
   const [dobDay, setDobDay] = useState('');
   const [dobYear, setDobYear] = useState('');
   const [photo, setPhoto] = useState(null);
-  const {username} = useGlobalContext();
+  const [editableField, setEditableField] = useState(null); // Track which field is editable
+  const { username } = useGlobalContext();
 
   const navigation = useNavigation();
 
+  // Refs for the TextInput components
+  const nameInputRef = useRef(null);
+  const descriptionInputRef = useRef(null);
+  const cityInputRef = useRef(null);
+  const dobDayInputRef = useRef(null);
+  const dobMonthInputRef = useRef(null);
+  const dobYearInputRef = useRef(null);
+  const emailInputRef = useRef(null);
+  const phoneNumberInputRef = useRef(null);
+  const websiteInputRef = useRef(null);
+
   useEffect(() => {
-    // Fetch the current profile picture when the component mounts
     fetchProfilePic();
     fetchUserDetails();
-    
   }, []);
 
   const fetchUserDetails = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await apiClient.get(`/users/${username}/`, 
-      { headers: { 
-        Authorization: `Bearer ${accessToken}` 
-      } });
+      const response = await apiClient.get(`/users/${username}/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       setName(response.data.name);
       setDescription(response.data.description);
       setCity(response.data.place);
@@ -44,14 +55,10 @@ const UpdateProfileScreen = () => {
       setPhoneNumber(response.data.phone_number);
 
       let date_of_birth = response.data.date_of_birth;
-      console.log("Date of birth: ", date_of_birth);
       const dob = date_of_birth.split("-");
-      console.log("Date of birth: ", dob);
-
       setDobYear(dob[0]);
       setDobMonth(dob[1]);
       setDobDay(dob[2]);
-
     } catch (error) {
       console.error('Failed to fetch user details', error);
     }
@@ -60,11 +67,11 @@ const UpdateProfileScreen = () => {
   const fetchProfilePic = async () => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
-      const response = await apiClient.get(`/users/${username}/user_pic/`, 
-      { headers: { 
-        Authorization: `Bearer ${accessToken}` 
-      } }
-      );
+      const response = await apiClient.get(`/users/${username}/user_pic/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
       setProfilePic({ uri: response.data.url });
     } catch (error) {
       console.error('Failed to fetch profile picture', error);
@@ -105,7 +112,7 @@ const UpdateProfileScreen = () => {
       const response = await apiClient.post(`/users/${username}/user_pic/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${accessToken}` 
+          Authorization: `Bearer ${accessToken}`,
         },
       });
       console.log('Success', 'Profile picture updated successfully');
@@ -116,43 +123,68 @@ const UpdateProfileScreen = () => {
     }
   };
 
-  const handleSaveChanges = async() => {
-    // Implement the save changes logic here
-    // Example API call:
+  const handleSaveChanges = async () => {
     const dateOfBirth = `${dobYear}-${dobMonth}-${dobDay}`;
     const accessToken = await AsyncStorage.getItem('accessToken');
-    apiClient.post(`/users/${username}/`, { name, description, place:city, phone_number:phoneNumber, email,  date_of_birth: dateOfBirth},
-    { headers: { 
-      Authorization: `Bearer ${accessToken}` 
-    } }
-    )
-      .then(response => {
+    apiClient
+      .post(
+        `/users/${username}/`,
+        { name, description, place: city, phone_number: phoneNumber, email, date_of_birth: dateOfBirth },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      )
+      .then((response) => {
         setStatusMessage('Profile updated successfully.');
         navigation.goBack();
       })
-      .catch(error => {
+      .catch((error) => {
         setStatusMessage('Error updating profile. Please try again.');
         console.error('Error updating profile:', error);
       });
   };
 
   const handleVerifyEmail = async () => {
- 
     const accessToken = await AsyncStorage.getItem('accessToken');
-    await apiClient.post('/users/send-email-code/', { email }, 
-    { headers: { 
-      Authorization: `Bearer ${accessToken}` 
-    } }
-    )
-      .then(response => {
+    await apiClient
+      .post('/users/send-email-code/', { email }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+      .then((response) => {
         setStatusMessage(response.data.detail);
       })
-      .catch(error => {
+      .catch((error) => {
         setStatusMessage('Error sending verification code. Please try again.');
         console.error('Error sending verification code:', error);
       });
   };
 
+  const handleFieldEdit = (field, ref) => {
+    setEditableField(field);
+    setTimeout(() => {
+      ref.current.focus();
+    }, 100); // Focus the corresponding TextInput
+  };
+
+  const handleFieldBlur = (field) => {
+    setEditableField(null);
+  };
+
+  const handleDateFieldBlur = () => {
+    // Only reset editable state for date fields when all have lost focus
+    if (
+      dobDayInputRef.current.isFocused() ||
+      dobMonthInputRef.current.isFocused() ||
+      dobYearInputRef.current.isFocused()
+    ) {
+      return;
+    }
+    setEditableField(null);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -175,76 +207,147 @@ const UpdateProfileScreen = () => {
 
       <View style={styles.sectionContainer}>
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Username</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Username</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('username', nameInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={[styles.input, styles.disabledInput]}
+            ref={nameInputRef}
+            style={[
+              styles.input,
+              styles.disabledInput,
+              editableField === 'username' ? styles.editableInput : null,
+            ]}
             value={username}
-            editable={false}
+            editable={editableField === 'username'}
+            onBlur={() => handleFieldBlur('username')}
           />
         </View>
       </View>
 
       <View style={styles.sectionContainer}>
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Full Name</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Full Name</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('name', nameInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={styles.input}
+            ref={nameInputRef}
+            style={[
+              styles.input,
+              editableField === 'name' ? styles.editableInput : null,
+            ]}
             placeholder="Full Name"
             value={name}
+            editable={editableField === 'name'}
             onChangeText={setName}
+            onBlur={() => handleFieldBlur('name')}
           />
         </View>
 
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Bio</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Bio</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('description', descriptionInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={[styles.input, styles.multiLineInput]}
+            ref={descriptionInputRef}
+            style={[
+              styles.input,
+              styles.multiLineInput,
+              editableField === 'description' ? styles.editableInput : null,
+            ]}
             placeholder="Enter bio"
             value={description}
-            onChangeText={text => {
+            editable={editableField === 'description'}
+            onChangeText={(text) => {
               if (text.length <= 180) setDescription(text);
             }}
             multiline={true}
             maxLength={180}
+            onBlur={() => handleFieldBlur('description')}
           />
         </View>
 
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Location</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Location</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('city', cityInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={styles.input}
+            ref={cityInputRef}
+            style={[
+              styles.input,
+              editableField === 'city' ? styles.editableInput : null,
+            ]}
             placeholder="Location"
             value={city}
+            editable={editableField === 'city'}
             onChangeText={setCity}
+            onBlur={() => handleFieldBlur('city')}
           />
         </View>
 
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Date of Birth</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Date of Birth</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('dob', dobDayInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.dobContainer}>
             <TextInput
-              style={[styles.input, styles.dobInput]}
+              ref={dobDayInputRef}
+              style={[
+                styles.input,
+                styles.dobInput,
+                editableField === 'dob' ? styles.editableInput : null,
+              ]}
               placeholder="DD"
               value={dobDay}
+              editable={editableField === 'dob'}
               onChangeText={setDobDay}
               maxLength={2}
               keyboardType="numeric"
+              onBlur={handleDateFieldBlur}
             />
             <TextInput
-              style={[styles.input, styles.dobInput]}
+              ref={dobMonthInputRef}
+              style={[
+                styles.input,
+                styles.dobInput,
+                editableField === 'dob' ? styles.editableInput : null,
+              ]}
               placeholder="MM"
               value={dobMonth}
+              editable={editableField === 'dob'}
               onChangeText={setDobMonth}
               maxLength={2}
               keyboardType="numeric"
+              onBlur={handleDateFieldBlur}
             />
             <TextInput
-              style={[styles.input, styles.dobInput]}
+              ref={dobYearInputRef}
+              style={[
+                styles.input,
+                styles.dobInput,
+                editableField === 'dob' ? styles.editableInput : null,
+              ]}
               placeholder="YYYY"
               value={dobYear}
+              editable={editableField === 'dob'}
               onChangeText={setDobYear}
               maxLength={4}
               keyboardType="numeric"
+              onBlur={handleDateFieldBlur}
             />
           </View>
         </View>
@@ -252,13 +355,25 @@ const UpdateProfileScreen = () => {
 
       <View style={styles.sectionContainer}>
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Email</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('email', emailInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.emailContainer}>
             <TextInput
-              style={[styles.input, styles.emailInput]}
+              ref={emailInputRef}
+              style={[
+                styles.input,
+                styles.emailInput,
+                editableField === 'email' ? styles.editableInput : null,
+              ]}
               placeholder="Email"
               value={email}
+              editable={editableField === 'email'}
               onChangeText={setEmail}
+              onBlur={() => handleFieldBlur('email')}
             />
             <TouchableOpacity style={styles.verifyButton} onPress={handleVerifyEmail}>
               <Text style={styles.verifyButtonText}>Verify</Text>
@@ -267,22 +382,44 @@ const UpdateProfileScreen = () => {
         </View>
 
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Phone Number</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Phone Number</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('phoneNumber', phoneNumberInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={styles.input}
+            ref={phoneNumberInputRef}
+            style={[
+              styles.input,
+              editableField === 'phoneNumber' ? styles.editableInput : null,
+            ]}
             placeholder="Phone Number"
             value={phoneNumber}
+            editable={editableField === 'phoneNumber'}
             onChangeText={setPhoneNumber}
+            onBlur={() => handleFieldBlur('phoneNumber')}
           />
         </View>
 
         <View style={styles.fieldContainer}>
-          <Text style={styles.label}>Link to Website</Text>
+          <View style={styles.labelContainer}>
+            <Text style={styles.label}>Link to Website</Text>
+            <TouchableOpacity onPress={() => handleFieldEdit('website', websiteInputRef)}>
+              <Image source={require('../assets/icons/pencil.png')} style={styles.icon} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={styles.input}
+            ref={websiteInputRef}
+            style={[
+              styles.input,
+              editableField === 'website' ? styles.editableInput : null,
+            ]}
             placeholder="Website"
             value={website}
+            editable={editableField === 'website'}
             onChangeText={setWebsite}
+            onBlur={() => handleFieldBlur('website')}
           />
         </View>
       </View>
@@ -350,10 +487,19 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 20,
   },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   label: {
     fontSize: 16,
     color: '#000',
-    marginBottom: 5,
+  },
+  icon: {
+    width: 16,
+    height: 16,
+    marginLeft: 5,
   },
   input: {
     height: 40,
@@ -365,6 +511,9 @@ const styles = StyleSheet.create({
   multiLineInput: {
     height: 80,
     textAlignVertical: 'top',
+  },
+  editableInput: {
+    backgroundColor: '#E0E0E0', //'#e6f7ff', // Light blue color indicating the field is editable
   },
   disabledInput: {
     backgroundColor: 'transparent',

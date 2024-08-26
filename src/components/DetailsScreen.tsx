@@ -39,10 +39,6 @@ const DetailsScreen = ({ route }) => {
   }, []);
 
   const gotToChat = (id : string) => {
-    // console.log("Bot val: ", bot)
-    // if(bot.chat == 1) {
-    // navigation.navigate("AvatarChat", {bot : bot});
-    // } else {
     navigation.navigate("GameScreen", {appId : bot.agent_id});
 
   }

@@ -65,7 +65,7 @@ const StoreScreen = () => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
         </TouchableOpacity>
-        <Text style={styles.title}>AI Bot Collections</Text>
+        <Text style={styles.title}>Game Store</Text>
       </View>
 
       <FlatList

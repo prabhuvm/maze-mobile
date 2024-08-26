@@ -18,10 +18,10 @@ const CollectionsScreen = () => {
   const showDetails = (id : string) => {
     navigation.navigate("Details", {bot : botDict[id]});
   }
-  
 
   const gotToChat = (item) => {
-    navigation.navigate("AvatarChat", {bot : item});
+    navigation.navigate("GameScreen", {appId : item.agent_id});
+
   }
 
   const AgentItem = ({ item }) => (

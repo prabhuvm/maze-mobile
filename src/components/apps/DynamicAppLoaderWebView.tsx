@@ -12,13 +12,6 @@ interface DynamicAppLoaderProps {
   appId: string;
 }
 
-interface FileInfo {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  type?: string;
-}
-
 const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +63,7 @@ const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
                   body: body
                 }));
 
-                window.addEventListener('message', function responseHandler(event) {
+                const responseHandler = function(event) {
                   const data = JSON.parse(event.data);
                   if (data.type === 'FETCH_RESPONSE') {
                     window.removeEventListener('message', responseHandler);
@@ -83,7 +76,8 @@ const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
                       reject(new Error(data.error));
                     }
                   }
-                });
+                };
+                window.addEventListener('message', responseHandler);
               });
             };
           })();
@@ -102,9 +96,7 @@ const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
 
     loadApp();
 
-    // Cleanup function
     return () => {
-      // Remove downloaded and extracted files
       RNFS.unlink(`${RNFS.CachesDirectoryPath}/${appId}.zip`).catch(console.error);
       RNFS.unlink(`${RNFS.CachesDirectoryPath}/${appId}`).catch(console.error);
     };
@@ -133,6 +125,7 @@ const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
           body: body || null
         });
         const responseBody = await response.text();
+        console.log("responseBody : ", responseBody);
         const responseHeaders = {};
         response.headers.forEach((value, key) => {
           responseHeaders[key] = value;
@@ -268,7 +261,6 @@ const processFiles = async (files: FileInfo[], indexContent: string) => {
   for (const file of files) {
     if (file.name !== 'index.html' && !file.isDirectory) {
       if (file.name.endsWith('.css') || file.name.endsWith('.js')) {
-        // For CSS and JS files, read as UTF-8 and inline
         const content = await RNFS.readFile(file.path, 'utf8');
         if (file.name.endsWith('.css')) {
           indexContent = indexContent.replace(`<link rel="stylesheet" href="${file.name}">`, `<style>${content}</style>`);
@@ -277,7 +269,6 @@ const processFiles = async (files: FileInfo[], indexContent: string) => {
         }
         console.log(`${file.name} inlined successfully`);
       } else {
-        // For other files (like images), read as base64 and create data URIs
         console.log("Getting base64 content for file: ", file.name);
         const content = await RNFS.readFile(file.path, 'base64');
         const mimeType = getMimeType(file.name);
@@ -288,7 +279,6 @@ const processFiles = async (files: FileInfo[], indexContent: string) => {
     }
   }
 
-  // Replace all file references with their corresponding data URIs
   for (const [fileName, dataUri] of dataUriMap.entries()) {
     const regex = new RegExp(escapeRegExp(fileName), 'g');
     indexContent = indexContent.replace(regex, dataUri);
@@ -298,7 +288,6 @@ const processFiles = async (files: FileInfo[], indexContent: string) => {
   return indexContent;
 };
 
-// Helper function to escape special characters in filenames for use in regex
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -312,7 +301,6 @@ function getMimeType(filename: string) {
     case 'gif': return 'image/gif';
     case 'svg': return 'image/svg+xml';
     case 'ico': return 'image/x-icon';
-    // Add more cases as needed
     default: return 'application/octet-stream';
   }
 }

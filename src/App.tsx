@@ -16,7 +16,6 @@ import ResetPasswordModal from './components/ResetPasswordModal';
 import SearchScreen from './components/SearchScreen'
 import StoreScreen from './components/AvatarStoreScreen';
 import DetailsScreen from './components/DetailsScreen';
-import AvatarChatScreen from './components/AvatarChatScreen';
 import PaymentsScreen from './components/PaymentsScreen';
 import { ThemeProvider } from './styles/ThemeContext';
 import SplashLogin from './components/SplashLogin';
@@ -62,7 +61,6 @@ function Routes() {
     <Stack.Screen name="Store" component={StoreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Details" component={DetailsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="GameScreen" component={GameScreen} options={{ headerShown: false }} />
-    <Stack.Screen name="AvatarChat" component={AvatarChatScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Explore" component={ExploreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Notification" component={NotificationScreen} options={{ headerShown: false }} />

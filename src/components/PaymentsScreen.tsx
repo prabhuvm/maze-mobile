@@ -1,10 +1,28 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { apiClient } from '../api/client';
 
 const PaymentsScreen = () => {
     const navigation = useNavigation();
-  const credits = 200;
+  const [credits, setCredits] = useState();
+
+  useEffect(() => {
+    const getCredits = async () => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      await apiClient.get('/credits/', { 
+        headers: { 
+          Authorization: `Bearer ${accessToken}` 
+        }
+      }).then(response => {
+          console.log("#### Credits:", response.data); // Debugging line
+          setCredits(response.data.credits);
+      });
+    };
+    getCredits();
+  }, []);
+
 
   const purchases = [
     { id: '1', name: 'AI generated blog post', range: '100 - 1,000 coins', image: 'path-to-blog-post-image' },
@@ -30,7 +48,7 @@ const PaymentsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.credits}>You have {credits.toLocaleString()} coins</Text>
+      <Text style={styles.credits}>You have {credits} coins</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.addButton}>
           <Text style={styles.addButtonText}>Add coins</Text>
