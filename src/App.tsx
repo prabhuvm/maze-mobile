@@ -38,7 +38,7 @@ import {
   getInitialNotification,
 } from './notificationSetup';
 import TournamentsScreen from './components/TournamentsScreen';
-import ShoppingPage from './components/ShoppingPage';
+import ShoppingPage from './components/bkp/ShoppingPage';
 
 const App = () => {
 

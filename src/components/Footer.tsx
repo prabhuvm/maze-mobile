@@ -5,12 +5,11 @@ import { useGlobalContext } from '../GlobalContext';
 import { useTheme } from '../styles/ThemeContext';
 
 
-const Footer = ({ navigation}) => {
+const Footer = ({homePress, navigation}) => {
 
   const [verifyVisible, setVerifyVisible] = useState(false);
   const { username } = useGlobalContext();
   const { theme } = useTheme();
-
 
 
   const toggleVerifyModal = () => {
@@ -21,13 +20,20 @@ const Footer = ({ navigation}) => {
     navigation.navigate('Store'); //todo: if button is on specific avatar, open the game.
   };
 
-
   return (
     <>
       <View style={[styles.footerContainer, { backgroundColor: theme.background }]}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Shopping')}>
+        {/* <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Shopping')}>
           <Image source={require('../assets/icons/store.png')} style={styles.icon} />
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Explore', {skip:false})}>
+          <Image source={require('../assets/icons/explore.png')} style={styles.icon} />
+        </TouchableOpacity> */}
+
+        <TouchableOpacity style={styles.iconButton} onPress={homePress}>
+          <Image source={require('../assets/icons/home.png')} style={styles.icon} />
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Tournaments')}>
           <Image source={require('../assets/icons/tournament.png')} style={styles.icon} />
         </TouchableOpacity>

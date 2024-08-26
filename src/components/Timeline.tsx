@@ -9,49 +9,50 @@ import { Avatar } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import PostModal from './PostModal';
 
-
 const samplePost = {
-    postid: 1,
-    username: 'JohnDoe',
-    handle: '@johndoe',
-    date: '2023-08-06T14:48:00.000Z',
+  postid: 1,
+  username: 'JohnDoe',
+  handle: '@johndoe',
+  date: '2023-08-06T14:48:00.000Z',
   content: 'This is a sample post content.',
-    images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
-    videos: [],
-    audios: [],
-    avatar: 'https://example.com/avatar.jpg',
-    comments: 10,
-    likes: 25,
-    shares: 5,
-    creator: {
-      username: 'shilpa',
-      profile_img: 'https://d391oeqqigkdbo.cloudfront.net/profile-pic/shilpa/shilpa_ipdgacAp.jpg',
-    },
-    participants: [
-      { username: 'JaneDoe', profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png' },
-      { username: 'Alice', profile_img: 'https://picsum.photos/id/237/200/300' },
-      { username: 'Bob', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-      { username: 'Charlie', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-      { username: 'David', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-      { username: 'Eve', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-      { username: 'Frank', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-    ],
-  };
+  images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+  videos: [],
+  audios: [],
+  avatar: 'https://example.com/avatar.jpg',
+  comments: 10,
+  likes: 25,
+  shares: 5,
+  creator: {
+    username: 'shilpa',
+    profile_img: 'https://d391oeqqigkdbo.cloudfront.net/profile-pic/shilpa/shilpa_ipdgacAp.jpg',
+  },
+  participants: [
+    { username: 'JaneDoe', profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png' },
+    { username: 'Alice', profile_img: 'https://picsum.photos/id/237/200/300' },
+    { username: 'Bob', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'Charlie', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'David', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'Eve', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    { username: 'Frank', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+  ],
+};
 
-  interface Post {
-      postid: number;
-      username: string;
-      handle: string;
-      date: string;
-      content: string;
-      images: string[];
-    videos: string[];
-      audios: string[];
-      avatar: string;
-      comments: number;
-      likes: number;
-      shares: number;
-    }
+interface Post {
+  postid: number;
+  username: string;
+  handle: string;
+  date: string;
+  content: string;
+  images: string[];
+  videos: string[];
+  audios: string[];
+  avatar: string;
+  comments: number;
+  likes: number;
+  shares: number;
+}
+
+const HOME_AVATAR_ID = 37;
 
 const TimelineScreen = ({ navigation }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -64,38 +65,51 @@ const TimelineScreen = ({ navigation }) => {
   const [availableAvatars, setAvailableAvatars] = useState<Avatar[]>([]);
   const { avatarId, setAvatarId, avatars, setAvatars, avatarDict, setAvatarDict, deviceToken } = useGlobalContext();
 
+
   const handleHomePress = async () => {
-    setPosts([]); // Clear the posts list before fetching new posts
+    setAvatarId(HOME_AVATAR_ID);
     console.log("################# Fetching posts for Home: ", avatarId); // Debugging line
-    const accessToken = await AsyncStorage.getItem('accessToken');
-    if (avatarId == 36) {  //TODO: Remove later - test with gemini for post ux
-      setMainScreen(true);
-      setPosts([samplePost])
-    } else {
-      setMainScreen(false);
-      apiClient.get(`/posts/${avatarId}/`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-        .then(response => {
-          console.log("Fetched posts for Home:", response.data); // Debugging line
-          setPosts(response.data);
-        })
-        .catch(error => console.error(error));
-    }
   };
 
   useEffect(() => {
-    handleHomePress(); // Fetch timeline for home.
-
     apiClient.get('/available-avatars')
       .then(response => {
         console.log("Available avatars:", response.data); // Debugging line
-        setAvailableAvatars(response.data);
+        // Add the aggregate avatar at the start of the available avatars list
+        setAvailableAvatars([response.data]);
       })
       .catch(error => console.error(error));
   }, []);
+
+  useEffect(() => {
+    const refreshPosts = async () => {
+      setPosts([]); // Clear the posts list before fetching new posts
+
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      if (avatarId == HOME_AVATAR_ID) { //TODO: Remove later - test with gemini for post ux
+        setMainScreen(true);
+        setPosts([samplePost])
+        setIsExpanded(false);
+        clearTimeout(timer);
+      } else {
+        setMainScreen(false);
+        apiClient.get(`/posts/${avatarId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        })
+          .then(response => {
+            console.log("###################### Fetched posts:", response.data); // Debugging line
+            setPosts(response.data);
+            setIsExpanded(false);
+            clearTimeout(timer);
+          })
+          .catch(error => console.error(error));
+      }  
+    }
+    console.log("######### AvatarId: ", avatarId);
+    refreshPosts();
+  }, [avatarId]);
 
   const toggleExpand = (id: number) => {
     setExpandedPosts(prevState => ({
@@ -109,36 +123,7 @@ const TimelineScreen = ({ navigation }) => {
   };
 
   const handleAvatarPress = async (id: number) => {
-    setPosts([]); // Clear the posts list before fetching new posts
-    console.log("Fetching posts for avatar:", id); // Debugging line
-    console.log("######### Avatar dict:", avatarDict);
-    console.log("######### Avatar selected:", avatarId);
-    console.log("######### Avatar :", avatarDict[avatarId]);
-
-    const accessToken = await AsyncStorage.getItem('accessToken');
-    if (id == 36) { //TODO: Remove later - test with gemini for post ux
-      setMainScreen(true);
-      setPosts([samplePost])
-      setAvatarId(id);
-      setIsExpanded(false);
-      clearTimeout(timer);
-    } else {
-      setMainScreen(false);
-      apiClient.get(`/posts/${id}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      })
-        .then(response => {
-          console.log("###################### Fetched posts:", response.data); // Debugging line
-          setPosts(response.data);
-          setAvatarId(id);
-          setIsExpanded(false);
-          clearTimeout(timer);
-        })
-        .catch(error => console.error(error));
-    }
-
+    setAvatarId(id);
   };
 
   const handleAddPress = () => {
@@ -160,26 +145,16 @@ const TimelineScreen = ({ navigation }) => {
 
       setAvatarId(avatar.id);
       setModalVisible(false);
-
-      // Fetch posts for the selected avatar
-      setPosts([]); // Clear the posts list before fetching new posts
-      console.log("Fetching posts for new avatar:", avatar.id); // Debugging line
-      const accessToken = await AsyncStorage.getItem('accessToken');
-      apiClient.get(`/posts/${avatar.id}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }).then(response => {
-        console.log("Fetched posts for new avatar:", response.data); // Debugging line
-        setPosts(response.data);
-      })
-        .catch(error => console.error(error));
     }
   };
 
   const renderAvailableAvatar = ({ item }: { item: Avatar }) => (
-    <TouchableOpacity onPress={() => handleAvatarSelect(item)} style={styles.avatarContainer}>
-      <Image style={styles.avatar} source={{ uri: item.avatar }} />
+    <TouchableOpacity onPress={() => handleAvatarSelect(item)} style={[styles.avatarContainer, item.id === -1 && styles.aggregateAvatar]}>
+      {item.id === -1 ? (
+        <Text style={styles.aggregateAvatarText}>All</Text>
+      ) : (
+        <Image style={styles.avatar} source={{ uri: item.avatar }} />
+      )}
       <Text style={styles.username} numberOfLines={1}>{item.username}</Text>
     </TouchableOpacity>
   );
@@ -244,7 +219,7 @@ const TimelineScreen = ({ navigation }) => {
         <Image source={require('../assets/icons/plus.png')} style={styles.fabIcon} />
       </TouchableOpacity>)}
 
-      <Footer navigation={navigation} />
+      <Footer homePress={handleHomePress} navigation={navigation} />
       <PostModal visible={postModalVisible} onClose={togglePostModal} addPost={addPost} navigation={navigation} />
     </View>
     
@@ -283,6 +258,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 80, // Adjust this value to move the FAB above the footer
     right: 20,
+ //   backgroundColor: '#FFD700',
     backgroundColor: '#6200EE',
     width: 56,
     height: 56,
@@ -295,6 +271,15 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: '#fff',
+  },
+  aggregateAvatar: {
+    backgroundColor: '#EFEFEF', // Set a background color for the aggregate avatar
+    padding: 5,
+    borderRadius: 50,
+  },
+  aggregateAvatarText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

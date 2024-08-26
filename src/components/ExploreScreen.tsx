@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, SafeAreaView, ScrollView } from 'react-native';
 
@@ -49,6 +49,8 @@ const peopleToFollow = [
 
 const ExploreScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const {skip} = route.params;
 
   const renderTrendingBot = ({ item }) => (
     <View style={styles.trendingBotContainer}>
@@ -79,9 +81,11 @@ const ExploreScreen = () => {
       <ScrollView>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Explore</Text>
+          {skip && (
           <TouchableOpacity onPress={() => navigation.navigate('SplashSignup')}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
+          )}
         </View>
         <Text style={styles.sectionTitle}>Trending now</Text>
         <FlatList

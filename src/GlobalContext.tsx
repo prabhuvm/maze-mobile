@@ -45,7 +45,7 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [accessToken, setAccessToken] = useState('');
   const [refreshToken, setRefreshToken] = useState('');
 
-  const [avatarId, setAvatarId] = useState(1); //Set default avatarId here.
+  const [avatarId, setAvatarId] = useState(37); //Set default avatarId here.
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [avatarDict, setAvatarDict] = useState<{ [key: number]: Avatar}>({});
 

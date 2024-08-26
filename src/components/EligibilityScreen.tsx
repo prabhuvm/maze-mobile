@@ -41,7 +41,7 @@ const EligibilityScreen = () => {
       </View>
     );
   }
-  navigation.navigate('Explore');
+  navigation.navigate('Explore', {skip:true});
 };
 
 const styles = StyleSheet.create({

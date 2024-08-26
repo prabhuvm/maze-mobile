@@ -24,7 +24,7 @@ const SplashLogin = () => {
       }
     })
       .then(response => {
-        setAvatarId(1);
+     //   setAvatarId(1);
         console.log("Avatars:", response.data); // Debugging line
         setAvatars(response.data);
 

@@ -2,23 +2,26 @@ import React from 'react';
 import { View, Text, Image, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 
 const ShoppingPage = () => {
+  const STORE_IMG_PATH = '../../assets/images/store-images/';
+  const ICON_PATH = '../../assets/icons/';
+
   const popularItems = [
-    { id: '1', name: 'Running Belt', price: '$24.99', image: require('../assets/images/store-images/running-belt.png') },
-    { id: '2', name: 'Yoga Mat', price: '$34.99', image: require('../assets/images/store-images/yoga-mat.png') },
-    { id: '3', name: 'Sports Water Bottle', price: '$14.99', image: require('../assets/images/store-images/water-bottle.png') },
+    { id: '1', name: 'Running Belt', price: '$24.99', image: require(STORE_IMG_PATH + 'running-belt.png') },
+    { id: '2', name: 'Yoga Mat', price: '$34.99', image: require(STORE_IMG_PATH + 'yoga-mat.png') },
+    { id: '3', name: 'Sports Water Bottle', price: '$14.99', image: require(STORE_IMG_PATH + 'water-bottle.png') },
   ];
 
   const categories = [
-    { id: '1', name: 'Shoes', image: require('../assets/images/store-images/shoes.png') },
-    { id: '2', name: 'Home Gym', image: require('../assets/images/store-images/home-gym.png') },
-    { id: '3', name: 'Outdoor Gear', image: require('../assets/images/store-images/outdoor-gear.png') },
-    { id: '4', name: 'Camping', image: require('../assets/images/store-images/camping.png') },
+    { id: '1', name: 'Shoes', image: require(STORE_IMG_PATH + 'shoes.png') },
+    { id: '2', name: 'Home Gym', image: require(STORE_IMG_PATH + 'home-gym.png') },
+    { id: '3', name: 'Outdoor Gear', image: require(STORE_IMG_PATH + 'outdoor-gear.png') },
+    { id: '4', name: 'Camping', image: require(STORE_IMG_PATH + 'camping.png') },
   ];
 
   const newArrivals = [
-    { id: '1', name: 'Running Watch', price: '$149.99', image: require('../assets/images/store-images/running-watch.png') },
-    { id: '2', name: 'Yoga Pants', price: '$54.99', image: require('../assets/images/store-images/yoga-pants.png') },
-    { id: '3', name: 'Fitness Tracker', price: '$99.99', image: require('../assets/images/store-images/fitness-tracker.png') },
+    { id: '1', name: 'Running Watch', price: '$149.99', image: require(STORE_IMG_PATH + 'running-watch.png') },
+    { id: '2', name: 'Yoga Pants', price: '$54.99', image: require(STORE_IMG_PATH + 'yoga-pants.png') },
+    { id: '3', name: 'Fitness Tracker', price: '$99.99', image: require(STORE_IMG_PATH + 'fitness-tracker.png') },
   ];
 
   const renderPopularItem = ({ item }) => (
@@ -51,7 +54,7 @@ const ShoppingPage = () => {
       </View>
 
       <View style={styles.searchContainer}>
-      <Image source={require('../assets/icons/search.png')} style={styles.searchIcon} />
+      <Image source={require(ICON_PATH + 'search.png')} style={styles.searchIcon} />
         <TextInput style={styles.searchInput} placeholder="Search for sports accessories" />
       </View>
 

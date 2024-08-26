@@ -22,10 +22,6 @@ const deleteAccount = async () => {
 
 const CustomDrawerContent = ({ toggleInviteModal, ...props }) => (
   <DrawerContentScrollView {...props}>
-    <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Timeline')}>
-      <Image source={require('../assets/icons/timeline.png')} style={styles.icon} />
-      <Text style={styles.menuItemText}>Timeline</Text>
-    </TouchableOpacity>
     <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Profile')}>
       <Image source={require('../assets/icons/profile.png')} style={styles.icon} />
       <Text style={styles.menuItemText}>Profile</Text>
@@ -35,10 +31,6 @@ const CustomDrawerContent = ({ toggleInviteModal, ...props }) => (
       <Text style={styles.menuItemText}>Coins</Text>
     </TouchableOpacity>
 
-    <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Update Profile')}>
-      <Image source={require('../assets/icons/edit.png')} style={styles.icon} />
-      <Text style={styles.menuItemText}>Update Profile</Text>
-    </TouchableOpacity>
     <TouchableOpacity style={styles.menuItem} onPress={toggleInviteModal}>
         <Image source={require('../assets/icons/invite.png')} style={styles.icon} />
         <Text style={styles.menuItemText}>Invite Friends</Text>
