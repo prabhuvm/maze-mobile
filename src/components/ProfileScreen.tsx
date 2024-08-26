@@ -13,6 +13,7 @@ const ProfileScreen = () => {
   const [profilePic, setProfilePic] = useState(null);
   const [curUser, setCurUser] = useState(false);
   const [followed, setFollowed] = useState(false);
+  const [premium, setPremium] = useState(false); // State to track if the user is premium
   const route = useRoute();
   const [profileUsername, setProfileUsername] = useState(route.params?.profileUsername || loginUsername);
 
@@ -63,6 +64,8 @@ const ProfileScreen = () => {
     } });
       setName(response.data.name);
       setDescription(response.data.description);
+      setPremium(response.data.premium); // Set the premium flag from the API response
+     console.log("#### User Details - premium: ", response.data.premium)
     } catch (error) {
       console.error('Failed to fetch user details', error);
     }
@@ -148,7 +151,12 @@ const ProfileScreen = () => {
         
       </View>
       <View style={styles.profileContainer}>
-        <Image source={profilePic || require('../assets/images/human.jpeg')} style={styles.avatar} />
+        <View style={styles.avatarContainer}>
+          <Image source={profilePic || require('../assets/images/human.jpeg')} style={styles.avatar} />
+          {premium && (
+            <Image source={require('../assets/icons/badge-f.png')} style={styles.premiumBadge} />
+          )}
+        </View>
         <Text style={styles.name}>{name}</Text>
         <Text style={styles.description}>{description}</Text>
       </View>
@@ -210,11 +218,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  avatarContainer: {
+    position: 'relative', // This makes the badge position relative to the avatar
+  },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 10,
+  },
+  premiumBadge: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    bottom: 0,
+    right: 0,
   },
   name: {
     fontSize: 20,

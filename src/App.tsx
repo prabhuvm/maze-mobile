@@ -37,6 +37,8 @@ import {
   handleNotificationOpenedApp,
   getInitialNotification,
 } from './notificationSetup';
+import TournamentsScreen from './components/TournamentsScreen';
+import ShoppingPage from './components/ShoppingPage';
 
 const App = () => {
 
@@ -61,7 +63,9 @@ function Routes() {
     <Stack.Screen name="Store" component={StoreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Details" component={DetailsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="GameScreen" component={GameScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Tournaments" component={TournamentsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Shopping" component={ShoppingPage} options={{ headerShown: false }} />
     <Stack.Screen name="Explore" component={ExploreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Notification" component={NotificationScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Message" component={MessageScreen} options={{ headerShown: false }} />

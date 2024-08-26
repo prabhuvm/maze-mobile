@@ -7,71 +7,77 @@ import Footer from './Footer';
 import { useGlobalContext } from '../GlobalContext';
 import { Avatar } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import PostModal from './PostModal';
+
 
 const samplePost = {
-  postid: 1,
-  username: 'JohnDoe',
-  handle: '@johndoe',
-  date: '2023-08-06T14:48:00.000Z',
+    postid: 1,
+    username: 'JohnDoe',
+    handle: '@johndoe',
+    date: '2023-08-06T14:48:00.000Z',
   content: 'This is a sample post content.',
-  images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
-  videos: [],
-  audios: [],
-  avatar: 'https://example.com/avatar.jpg',
-  comments: 10,
-  likes: 25,
-  shares: 5,
-  creator: {
-    username: 'shilpa',
-    profile_img: 'https://d391oeqqigkdbo.cloudfront.net/profile-pic/shilpa/shilpa_ipdgacAp.jpg',
-  },
-  participants: [
-    { username: 'JaneDoe', profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png' },
-    { username: 'Alice', profile_img: 'https://picsum.photos/id/237/200/300' },
-    { username: 'Bob', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-    { username: 'Charlie', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-    { username: 'David', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-    { username: 'Eve', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-    { username: 'Frank', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
-  ],
-};
+    images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+    videos: [],
+    audios: [],
+    avatar: 'https://example.com/avatar.jpg',
+    comments: 10,
+    likes: 25,
+    shares: 5,
+    creator: {
+      username: 'shilpa',
+      profile_img: 'https://d391oeqqigkdbo.cloudfront.net/profile-pic/shilpa/shilpa_ipdgacAp.jpg',
+    },
+    participants: [
+      { username: 'JaneDoe', profile_img: 'https://cdn.pixabay.com/photo/2024/02/15/13/55/ai-generated-8575453_1280.png' },
+      { username: 'Alice', profile_img: 'https://picsum.photos/id/237/200/300' },
+      { username: 'Bob', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+      { username: 'Charlie', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+      { username: 'David', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+      { username: 'Eve', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+      { username: 'Frank', profile_img: 'https://fastly.picsum.photos/id/103/2592/1936.jpg?hmac=aC1FT3vX9bCVMIT-KXjHLhP6vImAcsyGCH49vVkAjPQ' },
+    ],
+  };
 
-interface Post {
-  postid: number;
-  username: string;
-  handle: string;
-  date: string;
-  content: string;
-  images: string[];
-  videos: string[];
-  audios: string[];
-  avatar: string;
-  comments: number;
-  likes: number;
-  shares: number;
-}
+  interface Post {
+      postid: number;
+      username: string;
+      handle: string;
+      date: string;
+      content: string;
+      images: string[];
+    videos: string[];
+      audios: string[];
+      avatar: string;
+      comments: number;
+      likes: number;
+      shares: number;
+    }
 
 const TimelineScreen = ({ navigation }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [postModalVisible, setPostModalVisible] = useState(false);
+  const [mainScreen, setMainScreen] = useState(false);
   const [timer, setTimer] = useState(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [expandedPosts, setExpandedPosts] = useState<{ [key: number]: boolean }>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [availableAvatars, setAvailableAvatars] = useState<Avatar[]>([]);
-  const { avatarId, setAvatarId, avatars, setAvatars,  avatarDict, setAvatarDict, deviceToken} = useGlobalContext();
+  const { avatarId, setAvatarId, avatars, setAvatars, avatarDict, setAvatarDict, deviceToken } = useGlobalContext();
 
   const handleHomePress = async () => {
     setPosts([]); // Clear the posts list before fetching new posts
     console.log("################# Fetching posts for Home: ", avatarId); // Debugging line
     const accessToken = await AsyncStorage.getItem('accessToken');
-    if(avatarId == 36) {  //TODO: Remove later - test with gemini for post ux
+    if (avatarId == 36) {  //TODO: Remove later - test with gemini for post ux
+      setMainScreen(true);
       setPosts([samplePost])
     } else {
-        apiClient.get(`/posts/${avatarId}/`, { 
-        headers: { 
-          Authorization: `Bearer ${accessToken}` 
-        } 
-        })
+      setMainScreen(false);
+      apiClient.get(`/posts/${avatarId}/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
         .then(response => {
           console.log("Fetched posts for Home:", response.data); // Debugging line
           setPosts(response.data);
@@ -98,6 +104,10 @@ const TimelineScreen = ({ navigation }) => {
     }));
   };
 
+  const togglePostModal = async () => {
+    setPostModalVisible(!postModalVisible);
+  };
+
   const handleAvatarPress = async (id: number) => {
     setPosts([]); // Clear the posts list before fetching new posts
     console.log("Fetching posts for avatar:", id); // Debugging line
@@ -106,17 +116,19 @@ const TimelineScreen = ({ navigation }) => {
     console.log("######### Avatar :", avatarDict[avatarId]);
 
     const accessToken = await AsyncStorage.getItem('accessToken');
-    if(id == 36) { //TODO: Remove later - test with gemini for post ux
+    if (id == 36) { //TODO: Remove later - test with gemini for post ux
+      setMainScreen(true);
       setPosts([samplePost])
       setAvatarId(id);
       setIsExpanded(false);
       clearTimeout(timer);
     } else {
-      apiClient.get(`/posts/${id}`, { 
-        headers: { 
-          Authorization: `Bearer ${accessToken}` 
-        } 
-        })
+      setMainScreen(false);
+      apiClient.get(`/posts/${id}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
         .then(response => {
           console.log("###################### Fetched posts:", response.data); // Debugging line
           setPosts(response.data);
@@ -126,7 +138,7 @@ const TimelineScreen = ({ navigation }) => {
         })
         .catch(error => console.error(error));
     }
-    
+
   };
 
   const handleAddPress = () => {
@@ -153,14 +165,14 @@ const TimelineScreen = ({ navigation }) => {
       setPosts([]); // Clear the posts list before fetching new posts
       console.log("Fetching posts for new avatar:", avatar.id); // Debugging line
       const accessToken = await AsyncStorage.getItem('accessToken');
-      apiClient.get(`/posts/${avatar.id}`, { 
-        headers: { 
-          Authorization: `Bearer ${accessToken}` 
-        } 
-        }).then(response => {
-          console.log("Fetched posts for new avatar:", response.data); // Debugging line
-          setPosts(response.data);
-        })
+      apiClient.get(`/posts/${avatar.id}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }).then(response => {
+        console.log("Fetched posts for new avatar:", response.data); // Debugging line
+        setPosts(response.data);
+      })
         .catch(error => console.error(error));
     }
   };
@@ -226,8 +238,16 @@ const TimelineScreen = ({ navigation }) => {
           <Button title="Close" onPress={() => setModalVisible(false)} />
         </View>
       </Modal>
-      <Footer navigation={navigation} addPost={addPost} homeFn={handleHomePress}/>
+
+      {mainScreen && (
+      <TouchableOpacity style={styles.fab} onPress={togglePostModal}>
+        <Image source={require('../assets/icons/plus.png')} style={styles.fabIcon} />
+      </TouchableOpacity>)}
+
+      <Footer navigation={navigation} />
+      <PostModal visible={postModalVisible} onClose={togglePostModal} addPost={addPost} navigation={navigation} />
     </View>
+    
   );
 };
 
@@ -258,6 +278,23 @@ const styles = StyleSheet.create({
   },
   modalList: {
     justifyContent: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80, // Adjust this value to move the FAB above the footer
+    right: 20,
+    backgroundColor: '#6200EE',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+  },
+  fabIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff',
   },
 });
 
