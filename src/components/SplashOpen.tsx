@@ -16,7 +16,7 @@ const SplashOpen = () => {
   const svgDashOffset = useRef(new Animated.Value(1)).current;
   const svgOpacity = useRef(new Animated.Value(1)).current;
   const [initialRoute, setInitialRoute] = useState('');
-  const {deviceId, deviceToken, setDeviceId, setDeviceToken, setAccessToken, setRefreshToken, setUsername, setAvatars, setAvatarDict, setAvatarId} = useGlobalContext();
+  const {deviceId, deviceToken, username, setLoginPremium, setLoginName, setDeviceId, setDeviceToken, setAccessToken, setRefreshToken, setUsername, setAvatars, setAvatarDict, setAvatarId} = useGlobalContext();
 
   useEffect(() => {
     const fetchDeviceInfo = async () => {
@@ -114,6 +114,25 @@ useEffect(() => {
       checkAuth();
     }
   }, [deviceId]);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        console.log("Fetching User Details for: ", username);
+        const accessToken = await AsyncStorage.getItem('accessToken');
+        const response = await apiClient.get(`/users/${username}/`, 
+        { headers: { 
+          Authorization: `Bearer ${accessToken}` 
+      } });
+        setLoginName(response.data.name);
+        setLoginPremium(response.data.premium); // Set the premium flag from the API response
+       console.log("#### User Details - premium: ", response.data.premium)
+      } catch (error) {
+        console.error('Failed to fetch user details', error);
+      }
+    };
+    fetchUserDetails();
+  }, [username])
 
   useEffect(() => {
     // Animate the maze drawing

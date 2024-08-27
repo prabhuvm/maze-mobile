@@ -49,10 +49,15 @@ const Footer = ({homePress, navigation}) => {
           <Image source={require('../assets/icons/game.png')} style={[styles.icon, styles.invisibleIcon]} />
         </View>
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Message', {fusername:username})}>
-          <Image source={require('../assets/icons/message.png')} style={styles.icon} />
+          <Image source={require('../assets/icons/event-streams.png')} style={styles.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconButton} onPress={() => {  navigation.navigate('Notification');}}>
-          <Image source={require('../assets/icons/bell.png')} style={styles.icon} />
+
+        {/* <TouchableOpacity style={styles.iconButton} onPress={() => {  navigation.navigate('Notification');}}>
+            <Image source={require('../assets/icons/bell.png')}  style={styles.icon} />
+          </TouchableOpacity> */}
+          
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Message', {fusername:username})}>
+          <Image source={require('../assets/icons/message.png')} style={styles.icon} />
         </TouchableOpacity>
       </View>
       <EmailVerificationModal visible={verifyVisible} onClose={toggleVerifyModal} username={username} navigation={navigation} />

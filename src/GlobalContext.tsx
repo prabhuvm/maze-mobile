@@ -5,6 +5,8 @@ import { Avatar, Chat, Message, Notification } from './types';
 interface GlobalContextProps {
   username: string;
   setUsername: (username: string) => void;
+  loginName: string;
+  setLoginName: (loginName: string) => void;
   deviceId: string;
   setDeviceId: (deviceId: string) => void;
   deviceToken: string;
@@ -15,6 +17,8 @@ interface GlobalContextProps {
   setRefreshToken: (token: string) => void;
   email: string;
   setEmail: (email: string) => void;
+  loginPremium: boolean;
+  setLoginPremium: (loginPremium: boolean) => void;
   avatarId: number;
   setAvatarId: (avatarId: number) => void;
   avatars: Avatar[];
@@ -36,7 +40,10 @@ export const GlobalContext = createContext<GlobalContextProps | undefined>(undef
 
 export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [username, setUsername] = useState('');
+  const [loginName, setLoginName] = useState('');
   const [email, setEmail] = useState('');
+  const [loginPremium, setLoginPremium] = useState(false); 
+
   
   const [deviceId, setDeviceId] = useState('');
   
@@ -63,9 +70,9 @@ export const GlobalProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [selectedChat]);    // TODO: This might not be required
 
   return (
-    <GlobalContext.Provider value={{ username, setUsername, deviceId, setDeviceId, deviceToken, setDeviceToken,
+    <GlobalContext.Provider value={{ username, setUsername, loginName, setLoginName, deviceId, setDeviceId, deviceToken, setDeviceToken,
       accessToken, setAccessToken, refreshToken, setRefreshToken, messages, setMessages, selectedChat, setSelectedChat, selectedChatRef,
-      chatMessages, setChatMessages, notifications, setNotifications,
+      chatMessages, setChatMessages, notifications, setNotifications, loginPremium, setLoginPremium,
       email, setEmail, avatarId, setAvatarId, avatars, setAvatars, avatarDict, setAvatarDict }}>
       {children}
     </GlobalContext.Provider>

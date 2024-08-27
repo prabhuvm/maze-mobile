@@ -39,6 +39,9 @@ import {
 } from './notificationSetup';
 import TournamentsScreen from './components/TournamentsScreen';
 import ShoppingPage from './components/bkp/ShoppingPage';
+import SettingsScreen from './components/SettingsScreen';
+import CommunitiesScreen from './components/CommunitiesScreen';
+import LeaderboardScreen from './components/LeaderBoard';
 
 const App = () => {
 
@@ -71,6 +74,9 @@ function Routes() {
     <Stack.Screen name="Message" component={MessageScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Connections" component={ConnectionsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Collections" component={CollectionsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Community" component={CommunitiesScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Leaderboard" component={LeaderboardScreen} options={{ headerShown: false }} />
     <Stack.Screen name="InviteModal" component={InviteModal} options={{ headerShown: false }}/>
   </Stack.Navigator>
   );

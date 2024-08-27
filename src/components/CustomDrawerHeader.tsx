@@ -5,13 +5,9 @@ import { useTheme } from '../styles/ThemeContext';
 
 const CustomDrawerHeader = ({ navigation }) => {
   const [searchVisible, setSearchVisible] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
   const [keywords, setKeywords] = useState('');
   const {theme} = useTheme();
 
-  const toggleModal = () => {
-    setModalVisible(!modalVisible);
-  };
 
   const handleSearch = () => {
     navigation.navigate("Search", { keywords });
@@ -45,13 +41,16 @@ const CustomDrawerHeader = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
+
         <View style={styles.rightSection}>
-          <TouchableOpacity style={styles.iconButton} onPress={toggleModal}>
+          {/* <TouchableOpacity style={styles.iconButton} onPress={toggleModal}>
             <Image source={require('../assets/icons/cog.png')} style={styles.icon} />
+          </TouchableOpacity> */}
+          <TouchableOpacity style={styles.iconButton} onPress={() => {  navigation.navigate('Notification');}}>
+            <Image source={require('../assets/icons/bell.png')}  style={styles.icon} />
           </TouchableOpacity>
         </View>
       </View>
-      <SettingsModal visible={modalVisible} onClose={toggleModal} navigation={navigation} />
     </>
   );
 };
