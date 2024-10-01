@@ -1,309 +1,217 @@
 import React, { useState, useEffect, FC, useRef } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { WebView, WebViewProps, WebViewMessageEvent } from 'react-native-webview';
 import * as RNFS from 'react-native-fs';
-import * as ZipArchive from 'react-native-zip-archive';
-import { apiClient } from '../../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fromByteArray } from 'base64-js';
 import { useGlobalContext } from '../../GlobalContext';
+import { webViewBridgeScript } from './webViewBridge';
+import { downloadZipFile, extractZipFile, listFiles, processFiles } from './appLoaderUtils';
 
 interface DynamicAppLoaderProps {
   appId: string;
 }
 
+interface WebViewMessage {
+  type: string;
+  [key: string]: any;
+}
+
+/**
+ * Custom error class for app loading errors
+ */
+class AppLoaderError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AppLoaderError';
+  }
+}
+
+// WebView configuration object
+const webViewConfig: WebViewProps = {
+  javaScriptEnabled: true,
+  domStorageEnabled: true,
+  startInLoadingState: true,
+  scalesPageToFit: true,
+  originWhitelist: ['*'],
+  mixedContentMode: 'always',
+  allowsBackForwardNavigationGestures: true,
+  allowFileAccess: true,
+  allowUniversalAccessFromFileURLs: true,
+  allowsInlineMediaPlayback: true,
+};
+
+/**
+ * DynamicAppLoader component
+ * Loads and displays a dynamic app in a WebView
+ */
 const DynamicAppLoader: FC<DynamicAppLoaderProps> = ({ appId }) => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [htmlContent, setHtmlContent] = useState<string | null>(null);
-  const webViewRef = useRef(null);
+  const webViewRef = useRef<WebView>(null);
   const { username } = useGlobalContext();
 
   useEffect(() => {
-    const loadApp = async () => {
-      try {
-        // Step 1: Download the zip file
-        const zipFilePath = `${RNFS.CachesDirectoryPath}/${appId}.zip`;
-        await downloadZipFile(appId, zipFilePath);
-        console.log("Zip file downloaded");
-
-        // Step 2: Unzip the file
-        const extractPath = `${RNFS.CachesDirectoryPath}/${appId}`;
-        await ZipArchive.unzip(zipFilePath, extractPath);
-        console.log("Zip extract complete:", extractPath);
-
-        // Step 3: List all files in the extracted directory
-        const files = await listFiles(extractPath);
-        console.log("Files found:", files.map(f => f.name));
-
-        // Step 4: Read the index.html file
-        const indexFile = files.find(f => f.name === 'index.html');
-        if (!indexFile) {
-          throw new Error('index.html not found in the extracted files');
-        }
-        let indexContent = await RNFS.readFile(indexFile.path, 'utf8');
-        console.log("Index.html content loaded");
-
-        // Step 5: Process files and inline or convert to data URIs
-        indexContent = await processFiles(files, indexContent);
-
-        // Inject the message handling script
-        const injectedScript = `
-          <script>
-          (function() {
-            const originalFetch = window.fetch;
-            window.fetch = async function(url, options) {
-              return new Promise((resolve, reject) => {
-                const { method = 'GET', headers = {}, body = null } = options || {};
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  type: 'FETCH_REQUEST',
-                  url: url,
-                  method: method,
-                  headers: headers,
-                  body: body
-                }));
-
-                const responseHandler = function(event) {
-                  const data = JSON.parse(event.data);
-                  if (data.type === 'FETCH_RESPONSE') {
-                    window.removeEventListener('message', responseHandler);
-                    if (data.ok) {
-                      resolve(new Response(data.body, {
-                        status: data.status,
-                        headers: data.headers
-                      }));
-                    } else {
-                      reject(new Error(data.error));
-                    }
-                  }
-                };
-                window.addEventListener('message', responseHandler);
-              });
-            };
-          })();
-          </script>
-        `;
-        indexContent = indexContent.replace('</head>', `${injectedScript}</head>`);
-
-        setHtmlContent(indexContent);
-      } catch (err) {
-        console.error('Error loading app:', err);
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadApp();
-
-    return () => {
-      RNFS.unlink(`${RNFS.CachesDirectoryPath}/${appId}.zip`).catch(console.error);
-      RNFS.unlink(`${RNFS.CachesDirectoryPath}/${appId}`).catch(console.error);
-    };
+    return cleanup;
   }, [appId]);
 
-  const sendMessageToWebView = async () => {
-    const accessToken = await AsyncStorage.getItem('accessToken');
-    const dataToSend = {
-      username: username,
-      accessToken: accessToken,
-      agentId: appId
-    };
+  /**
+   * Loads the app by downloading, extracting, and processing the app files
+   */
+  const loadApp = async () => {
+    try {
+      const zipFilePath = `${RNFS.CachesDirectoryPath}/${appId}.zip`;
+      const extractPath = `${RNFS.CachesDirectoryPath}/${appId}`;
 
-    const message = JSON.stringify(dataToSend);
-    webViewRef.current.postMessage(message);
-  };
+      await downloadZipFile(appId, zipFilePath);
+      await extractZipFile(zipFilePath, extractPath);
 
-  const onMessage = async (event) => {
-    const data = JSON.parse(event.nativeEvent.data);
-    if (data.type === 'FETCH_REQUEST') {
-      const { url, method, headers, body } = data;
-      try {
-        const response = await fetch(url, {
-          method: method || 'GET',
-          headers: headers || {},
-          body: body || null
-        });
-        const responseBody = await response.text();
-        console.log("responseBody : ", responseBody);
-        const responseHeaders = {};
-        response.headers.forEach((value, key) => {
-          responseHeaders[key] = value;
-        });
-        webViewRef.current.injectJavaScript(`
-          window.postMessage(JSON.stringify({
-            type: 'FETCH_RESPONSE',
-            ok: ${response.ok},
-            status: ${response.status},
-            headers: ${JSON.stringify(responseHeaders)},
-            body: ${JSON.stringify(responseBody)}
-          }), '*');
-        `);
-      } catch (error) {
-        webViewRef.current.injectJavaScript(`
-          window.postMessage(JSON.stringify({
-            type: 'FETCH_RESPONSE',
-            ok: false,
-            error: '${error.message}'
-          }), '*');
-        `);
-      }
-    } else {
-      console.log('Message received from WebView:', event.nativeEvent.data);
+      const files = await listFiles(extractPath);
+      const indexFile = files.find(f => f.name === 'index.html');
+      if (!indexFile) throw new AppLoaderError('index.html not found in the extracted files');
+
+      let indexContent = await RNFS.readFile(indexFile.path, 'utf8');
+      indexContent = await processFiles(files, indexContent);
+      indexContent = injectWebViewBridge(indexContent);
+
+      setHtmlContent(indexContent);
+    } catch (err) {
+      console.error('Error loading app:', err);
+      setError(err instanceof Error ? err : new AppLoaderError('An unknown error occurred'));
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Loading game...</Text>
-      </View>
-    );
-  }
+  /**
+   * Cleans up temporary files after the component unmounts
+   */
+  const cleanup = () => {
+    RNFS.unlink(`${RNFS.CachesDirectoryPath}/${appId}.zip`).catch(console.error);
+    RNFS.unlink(`${RNFS.CachesDirectoryPath}/${appId}`).catch(console.error);
+  };
 
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text>Error: {error}</Text>
-      </View>
-    );
-  }
+  /**
+   * Injects the WebView bridge script into the HTML content
+   * @param content - The original HTML content
+   * @returns The HTML content with the injected bridge script
+   */
+  const injectWebViewBridge = (content: string) => {
+    return content.replace('</head>', `<script>${webViewBridgeScript}</script></head>`);
+  };
 
-  if (!htmlContent) {
-    return (
-      <View style={styles.container}>
-        <Text>Failed to load game</Text>
-      </View>
-    );
-  }
+  /**
+   * Sends initial data to the WebView after it loads
+   */
+  const sendMessageToWebView = async () => {
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    const dataToSend = { username, accessToken, agentId: appId };
+    webViewRef.current?.postMessage(JSON.stringify(dataToSend));
+  };
 
+  /**
+   * Handles fetch requests from the WebView
+   * @param data - The fetch request data
+   */
+  const handleFetchRequest = async (data: WebViewMessage) => {
+    const { url, method, headers, body } = data;
+    try {
+      const response = await fetch(url, { method, headers, body });
+      const responseBody = await response.text();
+      const responseHeaders = Object.fromEntries(response.headers.entries());
+      
+      // Send the response back to the WebView
+      webViewRef.current?.injectJavaScript(`
+        window.postMessage(JSON.stringify({
+          type: 'FETCH_RESPONSE',
+          ok: ${response.ok},
+          status: ${response.status},
+          headers: ${JSON.stringify(responseHeaders)},
+          body: ${JSON.stringify(responseBody)}
+        }), '*');
+      `);
+    } catch (error) {
+      // Send error response back to the WebView
+      webViewRef.current?.injectJavaScript(`
+        window.postMessage(JSON.stringify({
+          type: 'FETCH_RESPONSE',
+          ok: false,
+          error: '${error instanceof Error ? error.message : 'Unknown error'}'
+        }), '*');
+      `);
+    }
+  };
+
+  /**
+   * Handles messages received from the WebView
+   * @param event - The WebView message event
+   */
+  const onMessage = (event: WebViewMessageEvent) => {
+    const data: WebViewMessage = JSON.parse(event.nativeEvent.data);
+    switch (data.type) {
+      case 'FETCH_REQUEST':
+        handleFetchRequest(data);
+        break;
+      default:
+        console.log('Message received from WebView:', data);
+    }
+  };
+
+  // Render loading, error, or failed states if necessary
+  if (loading) return <LoadingView />;
+  if (error) return <ErrorView error={error.message} />;
+  if (!htmlContent) return <FailedLoadView />;
+
+  // Render the WebView with the loaded content
   return (
     <WebView
+      {...webViewConfig}
       source={{ html: htmlContent, baseUrl: '' }}
-      onLoad={() => sendMessageToWebView()}
+      onLoad={sendMessageToWebView}
       ref={webViewRef}
       style={styles.container}
-      javaScriptEnabled={true}
-      domStorageEnabled={true}
-      startInLoadingState={true}
-      scalesPageToFit={true}
-      originWhitelist={['*']}
-      mixedContentMode="always"
-      allowsBackForwardNavigationGestures={true}
-      allowFileAccess={true}
-      allowUniversalAccessFromFileURLs={true}
-      allowsInlineMediaPlayback={true}
       onError={(syntheticEvent) => {
-        const { nativeEvent } = syntheticEvent;
-        console.error('WebView error: ', nativeEvent);
+        console.error('WebView error: ', syntheticEvent.nativeEvent);
       }}
       onMessage={onMessage}
       onHttpError={(syntheticEvent) => {
-        const { nativeEvent } = syntheticEvent;
-        console.error('WebView HTTP error: ', nativeEvent);
+        console.error('WebView HTTP error: ', syntheticEvent.nativeEvent);
       }}
     />
   );
 };
 
-const downloadZipFile = async (appId: string, destination: string) => {
-  const accessToken = await AsyncStorage.getItem('accessToken');
-  const response = await apiClient.get(`/avatars/agents/${appId}/download/`,
-    { responseType: 'arraybuffer',
-      headers: { 
-      Authorization: `Bearer ${accessToken}` 
-   }});
-  
-   console.log("Game is downloaded");
-   const uint8Array = new Uint8Array(response.data);
-   const base64Data = fromByteArray(uint8Array);
-   await RNFS.writeFile(destination, base64Data, 'base64');
-   console.log("Game is written to file system");
-};
+/**
+ * LoadingView component
+ * Displays a loading indicator and message
+ */
+const LoadingView: FC = () => (
+  <View style={styles.container}>
+    <ActivityIndicator size="large" color="#0000ff" />
+    <Text>Loading game...</Text>
+  </View>
+);
 
-const listFiles = async (dirPath: string, depth: number = 0): Promise<FileInfo[]> => {
-  console.log(`Scanning directory (depth ${depth}):`, dirPath);
-  
-  try {
-    const files = await RNFS.readDir(dirPath);
-    const fileInfos: FileInfo[] = [];
+/**
+ * ErrorView component
+ * Displays an error message
+ */
+const ErrorView: FC<{ error: string }> = ({ error }) => (
+  <View style={styles.container}>
+    <Text>Error: {error}</Text>
+  </View>
+);
 
-    for (const file of files) {
-      const fileType = file.name.split('.').pop()?.toLowerCase();
-      console.log(`Found file: ${file.name}, isDirectory: ${file.isDirectory()}, type: ${fileType || 'unknown'}`);
-
-      const fileInfo: FileInfo = {
-        name: file.name,
-        path: file.path,
-        isDirectory: file.isDirectory(),
-        type: fileType
-      };
-
-      fileInfos.push(fileInfo);
-
-      if (file.isDirectory()) {
-        const subFiles = await listFiles(file.path, depth + 1);
-        fileInfos.push(...subFiles);
-      }
-    }
-
-    return fileInfos;
-  } catch (error) {
-    console.error(`Error reading directory ${dirPath}:`, error);
-    return [];
-  }
-};
-
-const processFiles = async (files: FileInfo[], indexContent: string) => {
-  const dataUriMap = new Map<string, string>();
-
-  for (const file of files) {
-    if (file.name !== 'index.html' && !file.isDirectory) {
-      if (file.name.endsWith('.css') || file.name.endsWith('.js')) {
-        const content = await RNFS.readFile(file.path, 'utf8');
-        if (file.name.endsWith('.css')) {
-          indexContent = indexContent.replace(`<link rel="stylesheet" href="${file.name}">`, `<style>${content}</style>`);
-        } else if (file.name.endsWith('.js')) {
-          indexContent = indexContent.replace(`<script type="text/babel" src="${file.name}"></script>`, `<script type="text/babel">${content}</script>`);
-        }
-        console.log(`${file.name} inlined successfully`);
-      } else {
-        console.log("Getting base64 content for file: ", file.name);
-        const content = await RNFS.readFile(file.path, 'base64');
-        const mimeType = getMimeType(file.name);
-        const dataUri = `data:${mimeType};base64,${content}`;
-        dataUriMap.set(file.name, dataUri);
-        console.log(`${file.name} converted to data URI successfully`);
-      }
-    }
-  }
-
-  for (const [fileName, dataUri] of dataUriMap.entries()) {
-    const regex = new RegExp(escapeRegExp(fileName), 'g');
-    indexContent = indexContent.replace(regex, dataUri);
-    console.log(`Replaced all occurrences of ${fileName} with its data URI`);
-  }
-
-  return indexContent;
-};
-
-function escapeRegExp(string: string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function getMimeType(filename: string) {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'png': return 'image/png';
-    case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'gif': return 'image/gif';
-    case 'svg': return 'image/svg+xml';
-    case 'ico': return 'image/x-icon';
-    default: return 'application/octet-stream';
-  }
-}
+/**
+ * FailedLoadView component
+ * Displays a message when the app fails to load
+ */
+const FailedLoadView: FC = () => (
+  <View style={styles.container}>
+    <Text>Failed to load game</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {

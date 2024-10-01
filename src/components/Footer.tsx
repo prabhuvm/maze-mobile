@@ -48,7 +48,7 @@ const Footer = ({homePress, navigation}) => {
         <View style={styles.dummyIconButton}>
           <Image source={require('../assets/icons/game.png')} style={[styles.icon, styles.invisibleIcon]} />
         </View>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Message', {fusername:username})}>
+        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('StreamScreen')}>
           <Image source={require('../assets/icons/event-streams.png')} style={styles.icon} />
         </TouchableOpacity>
 

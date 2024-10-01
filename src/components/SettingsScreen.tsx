@@ -15,6 +15,8 @@ const SettingsScreen = ({ navigation }) => {
     setState((previousState) => !previousState);
   };
 
+  
+
   const deleteAccount = async () => {
     try {
       const response = await apiClient.delete('/delete-account');

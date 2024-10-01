@@ -28,6 +28,7 @@ import ConnectionsScreen from './components/ConnectionsScreen';
 import CollectionsScreen from './components/AvatarCollectionsScreen';
 import InviteModal from './components/InviteModal';
 import GameScreen from './components/apps/GameScreen';
+import StreamScreen from './components/streams/StreamScreen-YT';
 
 import {
   requestUserPermission,
@@ -38,10 +39,11 @@ import {
   getInitialNotification,
 } from './notificationSetup';
 import TournamentsScreen from './components/TournamentsScreen';
-import ShoppingPage from './components/bkp/ShoppingPage';
+import ShoppingPage from './components/unrel/ShoppingPage';
 import SettingsScreen from './components/SettingsScreen';
 import CommunitiesScreen from './components/CommunitiesScreen';
 import LeaderboardScreen from './components/LeaderBoard';
+import PremiumMembershipScreen from './components/PremiumPage';
 
 const App = () => {
 
@@ -66,6 +68,7 @@ function Routes() {
     <Stack.Screen name="Store" component={StoreScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Details" component={DetailsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="GameScreen" component={GameScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="StreamScreen" component={StreamScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Tournaments" component={TournamentsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Payments" component={PaymentsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Shopping" component={ShoppingPage} options={{ headerShown: false }} />
@@ -77,6 +80,7 @@ function Routes() {
     <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Community" component={CommunitiesScreen} options={{ headerShown: false }} />
     <Stack.Screen name="Leaderboard" component={LeaderboardScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Premium" component={PremiumMembershipScreen} options={{ headerShown: false }} />
     <Stack.Screen name="InviteModal" component={InviteModal} options={{ headerShown: false }}/>
   </Stack.Navigator>
   );

@@ -4,11 +4,13 @@ import { DrawerContentScrollView } from '@react-navigation/drawer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
+import { useNavigation } from '@react-navigation/native';
 
 
 const CustomDrawerContent = ({ toggleInviteModal, ...props }) => {
-  const { username, loginName, loginPremium } = useGlobalContext();
+  const { username, loginName, loginPremium, deviceId } = useGlobalContext();
   const [profilePic, setProfilePic] = useState(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const fetchProfilePic = async () => {
@@ -26,7 +28,49 @@ const CustomDrawerContent = ({ toggleInviteModal, ...props }) => {
       }
     };
     fetchProfilePic();
-  }, [])
+  }, []);
+
+
+  const handleLogout = async () => {
+    try {
+         const refreshToken = await AsyncStorage.getItem('refreshToken');
+         const accessToken = await AsyncStorage.getItem('accessToken');
+          if (refreshToken) {
+            const response = await apiClient.post('/users/logout/', { deviceId }, 
+            { headers: { 
+              Authorization: `Bearer ${accessToken}`
+            } });
+          } else {
+            Alert.alert('Error', 'No refresh token found');
+          }
+        } catch (error) {
+          console.error(error);
+        } finally {
+          console.log("########################  log-out Cleanup: ");
+          await AsyncStorage.removeItem('accessToken');
+          await AsyncStorage.removeItem('refreshToken');
+          navigation.navigate('SplashLogout'); // Redirect to the Auth page or login screen
+        }
+      };
+
+        const confirmLogout = () => {
+            Alert.alert(
+              'Log Out',
+              'Are you sure you want to log out?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'OK',
+                  onPress: handleLogout,
+                },
+              ],
+              { cancelable: false }
+            );
+          };
+
 
   return (
     <DrawerContentScrollView {...props}>
@@ -48,7 +92,7 @@ const CustomDrawerContent = ({ toggleInviteModal, ...props }) => {
           <Image source={require('../assets/icons/profile.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Coins')}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Premium')}>
           <Image source={require('../assets/icons/badge-f.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Premium</Text>
         </TouchableOpacity>
@@ -86,6 +130,11 @@ const CustomDrawerContent = ({ toggleInviteModal, ...props }) => {
         <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Settings')}>
           <Image source={require('../assets/icons/cog.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Settings</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={confirmLogout}>
+          <Image source={require('../assets/icons/logout.png')} style={styles.icon} />
+          <Text style={styles.menuItemText}>Log Out</Text>
         </TouchableOpacity>
 
       </View>

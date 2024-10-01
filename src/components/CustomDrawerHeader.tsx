@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import SettingsModal from './SettingsModal';
 import { useTheme } from '../styles/ThemeContext';
 
 const CustomDrawerHeader = ({ navigation }) => {

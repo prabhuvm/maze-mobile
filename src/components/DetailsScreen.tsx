@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { apiClient } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from '../GlobalContext';
@@ -38,9 +38,53 @@ const DetailsScreen = ({ route }) => {
     fetchCollections();
   }, []);
 
-  const gotToChat = (id : string) => {
-    navigation.navigate("GameScreen", {appId : bot.agent_id});
 
+  const openAppOrStore = async (deepLink: string, appStoreUrl: string) => {
+    // try {
+
+      console.log(`Checking if can open deep link: ${deepLink}`);
+
+      await Linking.openURL(deepLink).catch(() => {
+        console.log("App is not installed, redirecting to app store...");
+        Linking.openURL(appStoreUrl);
+      });
+
+    //   if (supported) {
+        
+    //     console.log("App is installed, opening...");
+    //     await Linking.openURL(deepLink);
+    //     console.log("App opened successfully");
+    //   } else {
+    //     console.log("App is not installed, redirecting to app store...");
+    //     await Linking.openURL(appStoreUrl);
+    //     console.log("App store opened successfully");
+    //   }
+    // } catch (error) {
+    //   console.error('An error occurred:', error);
+    //   if (error instanceof Error) {
+    //     console.error('Error name:', error.name);
+    //     console.error('Error message:', error.message);
+    //     console.error('Error stack:', error.stack);
+    //   }
+      
+    //   if (error.message.includes('open')) {
+    //     Alert.alert("Error", "Unable to open the app or App Store");
+    //   } else {
+    //     Alert.alert("Error", "An error occurred while checking the app");
+    //   }
+    //}
+  };
+
+  
+  const gotToChat = async() => {
+    console.log("#### Bot Details ###### \n", bot);
+    if(bot.is_native == true) {
+      console.log("Launching app natively");
+      navigation.navigate("GameScreen", {appId : bot.agent_id});
+    } else {
+      console.log("Launching external app");
+      openAppOrStore(bot.deep_link_url, bot.app_store_url);
+    }
   }
 
   const addToCollection = async() => {
@@ -93,7 +137,7 @@ const DetailsScreen = ({ route }) => {
         </TouchableOpacity>)}
 
         <TouchableOpacity onPress={gotToChat} style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>Run Application</Text>
+          <Text style={styles.actionButtonText}>Launch Application</Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.specificationsTitle}>Specifications</Text>
