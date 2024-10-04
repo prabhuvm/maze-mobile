@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // To get the token
 import VideoModal from './VideoModal';  // Import the VideoModal component
-import { apiClient } from '../../api/client'; // Assume you have this set up for API requests
+import { apiClient } from '../../api/client';  // Assume you have this set up for API requests
+import StreamHeader from './StreamHeader';
+import VideoPlayerCarousel from './VideoPlayerCarousel';
+import TrendingSection from './TrendingSection';
+import StreamsSection from './StreamsSection';
 
 const StreamScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -10,6 +14,13 @@ const StreamScreen = () => {
   const [trendingData, setTrendingData] = useState([]);
   const [streamData, setStreamData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);  // Theme state
+
+  const videos = [
+    { videoId: 'dQw4w9WgXcQ' }, // Mock video data
+    { videoId: '3JZ_D3ELwOQ' },
+    { videoId: 'L_jWHffIx5E' },
+  ];
 
   // Function to fetch the data from API with Authorization
   const fetchStreamsData = async () => {
@@ -54,116 +65,68 @@ const StreamScreen = () => {
     setSelectedVideo(null);
   };
 
-  // Render a single item in the trending section
-  const renderTrendingItem = ({ item }) => (
-    <TouchableOpacity style={styles.trendingItem} onPress={() => openModal(item.video_id)}>
-      <Image source={{ uri: item.image_url }} style={styles.trendingImage} />
-      <Text style={styles.trendingTitle}>{item.title}</Text>
-      <Text style={styles.trendingPlatform}>{item.platform}</Text>
-    </TouchableOpacity>
-  );
+  // Function to toggle theme
+  const toggleTheme = () => {
+    setIsDarkTheme(previousState => !previousState);
+  };
 
-  // Render a single item in the stream/timeline section
-  const renderStreamItem = ({ item }) => (
-    <TouchableOpacity style={styles.streamItem} onPress={() => openModal(item.video_id)}>
-      <Image source={{ uri: item.image_url }} style={styles.streamImage} />
-      <View style={styles.streamTextContainer}>
-        <Text style={styles.streamTitle}>{item.title}</Text>
-        <Text style={styles.streamSubtitle}>{item.views} · {item.date}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+  const themeStyles = isDarkTheme ? darkTheme : lightTheme;
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.sectionTitle}>Trending</Text>
-      <FlatList
-        data={trendingData}
-        renderItem={renderTrendingItem}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.trendingList}
-      />
+    <ScrollView style={[styles.container, themeStyles.container]}>
+      {/* Header Component */}
+      <StreamHeader isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
 
-      <Text style={styles.sectionTitle}>Streams</Text>
-      <FlatList
-        data={streamData}
-        renderItem={renderStreamItem}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.streamList}
-      />
+      {/* Full-Screen Video Player Carousel */}
+      <VideoPlayerCarousel videos={videos} />
+
+      {/* Trending Section */}
+      <TrendingSection trendingData={trendingData} openModal={openModal} themeStyles={themeStyles} />
+
+      {/* Streams Section */}
+      <StreamsSection streamData={streamData} openModal={openModal} themeStyles={themeStyles} />
 
       {/* Video modal */}
       {selectedVideo && (
-        <VideoModal visible={modalVisible} onClose={closeModal} videoId={selectedVideo} />
+        <VideoModal visible={modalVisible} onClose={closeModal} videoId={selectedVideo} theme={isDarkTheme ? 'dark' : 'light'} />
       )}
     </ScrollView>
   );
 };
 
+// Define Light and Dark Theme Styles
+const lightTheme = StyleSheet.create({
+  container: {
+    backgroundColor: '#F8F9FA',
+  },
+  sectionTitle: {
+    color: '#333',
+  },
+  text: {
+    color: '#333',
+  },
+});
+
+const darkTheme = StyleSheet.create({
+  container: {
+    backgroundColor: '#000000',  // Dark background
+  },
+  sectionTitle: {
+    color: '#FFFFFF',
+  },
+  text: {
+    color: '#FFFFFF',
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA', // Light background
     padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333', // Dark text color
-    marginBottom: 12,
-  },
-  trendingList: {
-    paddingBottom: 16,
-  },
-  trendingItem: {
-    marginRight: 16,
-    width: 150,
-  },
-  trendingImage: {
-    width: '100%',
-    height: 100,
-    borderRadius: 8,
-  },
-  trendingTitle: {
-    color: '#333', // Dark text color
-    marginTop: 8,
-    fontWeight: 'bold',
-  },
-  trendingPlatform: {
-    color: '#555', // Subtle dark color for platform
-    fontSize: 12,
-  },
-  streamList: {
-    paddingBottom: 16,
-  },
-  streamItem: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  streamImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  streamTextContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  streamTitle: {
-    color: '#333', // Dark text color
-    fontWeight: 'bold',
-  },
-  streamSubtitle: {
-    color: '#555', // Subtle dark text for subtitle
-    marginTop: 4,
   },
 });
 

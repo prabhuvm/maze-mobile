@@ -4,27 +4,25 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Linking } 
 import { apiClient } from '../api/client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGlobalContext } from '../GlobalContext';
+import { NativeModules } from 'react-native';
+import GameInviteModal from './details/GameInviteModal';  // Import the InviteModal
 
 const DetailsScreen = ({ route }) => {
   const navigation = useNavigation();
   const { bot } = route.params;
   const {username} = useGlobalContext();
-  const [botAdded, setBotAdded] = useState(false);  //ToDo : move this to common
-
+  const [botAdded, setBotAdded] = useState(false);
+  const [inviteVisible, setInviteVisible] = useState(false); // State to show/hide modal
 
   useEffect(() => {
-    const fetchCollections = async() => { //TODO: Move this to common
+    const fetchCollections = async() => {
       const accessToken = await AsyncStorage.getItem('accessToken');
       await apiClient.get(`/users/${username}/agents/`,  
         { headers: { 
           Authorization: `Bearer ${accessToken}` 
        }})
         .then(response => {
-          console.log("## Agents recieved: ", response.data);
-          console.log("## Current agent: ", bot.id)
-
           const botDictionary = response.data.reduce((acc, avatar) => {
-            console.log("@@ Adding ", avatar.id);
             acc[avatar.id] = avatar;
             return acc;
           }, {});
@@ -38,71 +36,31 @@ const DetailsScreen = ({ route }) => {
     fetchCollections();
   }, []);
 
-
-  const openAppOrStore = async (deepLink: string, appStoreUrl: string) => {
-    // try {
-
-      console.log(`Checking if can open deep link: ${deepLink}`);
-
-      await Linking.openURL(deepLink).catch(() => {
-        console.log("App is not installed, redirecting to app store...");
-        Linking.openURL(appStoreUrl);
-      });
-
-    //   if (supported) {
-        
-    //     console.log("App is installed, opening...");
-    //     await Linking.openURL(deepLink);
-    //     console.log("App opened successfully");
-    //   } else {
-    //     console.log("App is not installed, redirecting to app store...");
-    //     await Linking.openURL(appStoreUrl);
-    //     console.log("App store opened successfully");
-    //   }
-    // } catch (error) {
-    //   console.error('An error occurred:', error);
-    //   if (error instanceof Error) {
-    //     console.error('Error name:', error.name);
-    //     console.error('Error message:', error.message);
-    //     console.error('Error stack:', error.stack);
-    //   }
-      
-    //   if (error.message.includes('open')) {
-    //     Alert.alert("Error", "Unable to open the app or App Store");
-    //   } else {
-    //     Alert.alert("Error", "An error occurred while checking the app");
-    //   }
-    //}
+  const openAppOrStore = async (appStoreId) => {
+    const { AppLauncher } = NativeModules;
+    await AppLauncher.launchApp(appStoreId)
+      .then(() => console.log('App opened successfully'))
+      .catch(err => console.log('Error opening app: ', err));
   };
 
-  
-  const gotToChat = async() => {
-    console.log("#### Bot Details ###### \n", bot);
-    if(bot.is_native == true) {
-      console.log("Launching app natively");
+  const gotToChat = () => {
+    if (bot.is_native) {
       navigation.navigate("GameScreen", {appId : bot.agent_id});
     } else {
-      console.log("Launching external app");
-      openAppOrStore(bot.deep_link_url, bot.app_store_url);
+      openAppOrStore(bot.deep_link_url);
     }
-  }
+  };
 
   const addToCollection = async() => {
     const accessToken = await AsyncStorage.getItem('accessToken');
     await apiClient.post(`/users/${username}/agents/`, {
-        agent:bot.id
+        agent: bot.id
       }, { headers: { 
         Authorization: `Bearer ${accessToken}` 
      }})
-      .then(response => {
-        setBotAdded(true);
-        console.log('Added successfully!'); //Todo: change button to Remove and also implement delete function.
-      })
-      .catch(error => {
-        console.error('Error following:', error);
-      });
-  }
-
+      .then(() => setBotAdded(true))
+      .catch(error => console.error('Error following:', error));
+  };
 
   const removeFromCollection = async() => {
     const accessToken = await AsyncStorage.getItem('accessToken');
@@ -110,44 +68,48 @@ const DetailsScreen = ({ route }) => {
       { headers: { 
         Authorization: `Bearer ${accessToken}` 
      }})
-      .then(response => {
-        setBotAdded(false);
-        console.log('Removed successfully!'); //Todo: change button to Remove and also implement delete function.
-      })
-      .catch(error => {
-        console.error('Error following:', error);
-      });
-  }
+      .then(() => setBotAdded(false))
+      .catch(error => console.error('Error following:', error));
+  };
+
+  const openInviteModal = () => setInviteVisible(true);  // Function to show modal
+  const closeInviteModal = () => setInviteVisible(false); // Function to hide modal
 
   return (
     <ScrollView style={styles.container}>
       <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
-        </TouchableOpacity>
+        <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
+      </TouchableOpacity>
       <Image source={{ uri: bot.app_screenshot_url }} style={styles.botImage} />
       <Text style={styles.botName}>{bot.name}</Text>
       <Text style={styles.botDescription}>{bot.description}</Text>
       <View style={styles.buttonContainer}>
-        {botAdded == true ? 
-        (<TouchableOpacity style={styles.actionButton} onPress={() => removeFromCollection()} >
-            <Text style={styles.actionButtonText}>Remove from Collection</Text>
-          </TouchableOpacity>) : 
-          (<TouchableOpacity style={styles.actionButton} onPress={() => addToCollection()} >
-          <Text style={styles.actionButtonText}>Add to Collection</Text>
-        </TouchableOpacity>)}
+        {botAdded ? 
+          (<TouchableOpacity style={styles.actionButton} onPress={removeFromCollection}>
+              <Text style={styles.actionButtonText}>Remove from Collection</Text>
+           </TouchableOpacity>) : 
+          (<TouchableOpacity style={styles.actionButton} onPress={addToCollection}>
+              <Text style={styles.actionButtonText}>Add to Collection</Text>
+           </TouchableOpacity>)
+        }
 
         <TouchableOpacity onPress={gotToChat} style={styles.actionButton}>
           <Text style={styles.actionButtonText}>Launch Application</Text>
         </TouchableOpacity>
       </View>
+
       <Text style={styles.specificationsTitle}>Specifications</Text>
       <View style={styles.specificationsContainer}>
-        {/* {bot.specifications.map((spec, index) => (
-          <View key={index} style={styles.specification}>
-            <Text style={styles.specificationText}>{spec}</Text>
-          </View>
-        ))} */}
+        {/* Add your specifications here */}
       </View>
+
+      {/* Floating Bubble Button */}
+      <TouchableOpacity style={styles.floatingButton} onPress={openInviteModal}>
+        <Text style={styles.floatingButtonText}>+</Text>
+      </TouchableOpacity>
+
+      {/* Invite Modal */}
+      <GameInviteModal visible={inviteVisible} onClose={closeInviteModal} botId={bot.id} />
     </ScrollView>
   );
 };
@@ -198,10 +160,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  fullWidthButton: {
-    flex: 0,
-    width: '100%',
-  },
   specificationsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -212,16 +170,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  specification: {
-    backgroundColor: '#E0E0E0',
-    borderRadius: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    margin: 5,
+  floatingButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#6200EA',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1, // To make sure it's above other elements
   },
-  specificationText: {
-    fontSize: 14,
-    color: '#000',
+  floatingButtonText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 

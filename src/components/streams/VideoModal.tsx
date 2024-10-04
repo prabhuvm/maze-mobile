@@ -1,4 +1,3 @@
-// VideoModal.js
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, ScrollView, Image, TextInput, StyleSheet } from 'react-native';
 import YoutubePlayer from 'react-native-youtube-iframe';
@@ -10,14 +9,17 @@ const commentsData = [
   { id: '3', user: 'Jason Keith', comment: 'Your videos are awesome and you deserve so many more subscribers.', time: '30min ago', likes: 6, replies: 2, userImage: 'https://via.placeholder.com/50' },
 ];
 
-const VideoModal = ({ visible, onClose, videoId }) => {
+const VideoModal = ({ visible, onClose, videoId, theme }) => {
+  // Define theme-based styles
+  const themeStyles = theme === 'dark' ? darkTheme : lightTheme;
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} transparent={true}>
       <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, themeStyles.modalContent]}>
           {/* Close button */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Close</Text>
+            <Text style={[styles.closeButtonText, themeStyles.closeButtonText]}>Close</Text>
           </TouchableOpacity>
 
           {/* YouTube Player */}
@@ -30,23 +32,25 @@ const VideoModal = ({ visible, onClose, videoId }) => {
 
           {/* Comments Section */}
           <ScrollView style={styles.commentsContainer}>
-            <Text style={styles.commentsTitle}>Comments</Text>
+            <Text style={[styles.commentsTitle, themeStyles.text]}>Comments</Text>
             {commentsData.map((comment) => (
               <View key={comment.id} style={styles.comment}>
                 <Image source={{ uri: comment.userImage }} style={styles.commentUserImage} />
                 <View style={styles.commentContent}>
-                  <Text style={styles.commentUser}>{comment.user} <Text style={styles.commentTime}>{comment.time}</Text></Text>
-                  <Text style={styles.commentText}>{comment.comment}</Text>
+                  <Text style={[styles.commentUser, themeStyles.text]}>
+                    {comment.user} <Text style={[styles.commentTime, themeStyles.subText]}>{comment.time}</Text>
+                  </Text>
+                  <Text style={[styles.commentText, themeStyles.text]}>{comment.comment}</Text>
                   <View style={styles.commentActions}>
-                    <Text style={styles.likeCount}>👍 {comment.likes}</Text>
-                    <Text style={styles.replyCount}>💬 {comment.replies}</Text>
+                    <Text style={[styles.likeCount, themeStyles.subText]}>👍 {comment.likes}</Text>
+                    <Text style={[styles.replyCount, themeStyles.subText]}>💬 {comment.replies}</Text>
                   </View>
                 </View>
               </View>
             ))}
             {/* Add Comment Section */}
-            <View style={styles.addCommentContainer}>
-              <TextInput style={styles.addCommentInput} placeholder="Add a comment" />
+            <View style={[styles.addCommentContainer, themeStyles.addCommentContainer]}>
+              <TextInput style={[styles.addCommentInput, themeStyles.addCommentInput]} placeholder="Add a comment" placeholderTextColor={theme === 'dark' ? '#888' : '#AAA'} />
             </View>
           </ScrollView>
         </View>
@@ -55,6 +59,49 @@ const VideoModal = ({ visible, onClose, videoId }) => {
   );
 };
 
+// Define Light and Dark Theme Styles
+const lightTheme = StyleSheet.create({
+  modalContent: {
+    backgroundColor: '#FFF',
+  },
+  closeButtonText: {
+    color: '#333',
+  },
+  text: {
+    color: '#333',
+  },
+  subText: {
+    color: '#777',
+  },
+  addCommentContainer: {
+    backgroundColor: '#F0F0F0',
+  },
+  addCommentInput: {
+    color: '#333',
+  },
+});
+
+const darkTheme = StyleSheet.create({
+  modalContent: {
+    backgroundColor: '#1C1C1C',
+  },
+  closeButtonText: {
+    color: '#FFF',
+  },
+  text: {
+    color: '#FFF',
+  },
+  subText: {
+    color: '#888',
+  },
+  addCommentContainer: {
+    backgroundColor: '#333',
+  },
+  addCommentInput: {
+    color: '#FFF',
+  },
+});
+
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
@@ -62,7 +109,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.3)',
   },
   modalContent: {
-    backgroundColor: '#FFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 16,
@@ -73,10 +119,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     padding: 10,
   },
-  closeButtonText: {
-    color: '#333',
-    fontWeight: 'bold',
-  },
   commentsContainer: {
     marginTop: 16,
   },
@@ -84,7 +126,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: '#333',
   },
   comment: {
     flexDirection: 'row',
@@ -101,14 +142,11 @@ const styles = StyleSheet.create({
   },
   commentUser: {
     fontWeight: 'bold',
-    color: '#333',
   },
   commentTime: {
-    color: '#777',
     fontSize: 12,
   },
   commentText: {
-    color: '#333',
     marginVertical: 4,
   },
   commentActions: {
@@ -117,23 +155,18 @@ const styles = StyleSheet.create({
   },
   likeCount: {
     marginRight: 16,
-    color: '#777',
   },
-  replyCount: {
-    color: '#777',
-  },
+  replyCount: {},
   addCommentContainer: {
     flexDirection: 'row',
     marginTop: 16,
     alignItems: 'center',
-    backgroundColor: '#F0F0F0',
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   addCommentInput: {
     flex: 1,
-    color: '#333',
   },
 });
 
