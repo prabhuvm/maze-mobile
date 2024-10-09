@@ -1,13 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import DatePicker from 'react-native-date-picker';  // Import the new date picker
+import axios from 'axios';  // Axios for making the POST request
 
-const GameInviteModal = ({ visible, onClose, botId }) => {
+const GameInviteModal = ({ visible, onClose, botId, username, botName }) => {
   const [participants, setParticipants] = useState('');
   const [schedule, setSchedule] = useState('now');
+  const [showDatePicker, setShowDatePicker] = useState(false);  // Controls visibility of DatePicker
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [title, setTitle] = useState('');
 
+  useEffect(() => {
+    // Generate the title as @username-@botname-datetime
+    const currentDate = schedule === 'later' ? selectedDate : new Date(); // Use selectedDate for 'later', or current date for 'now'
+    const formattedDate = currentDate.toISOString().split('T')[0];  // Get only date part
+    const formattedTime = currentDate.toTimeString().split(' ')[0]; // Get time part
+    setTitle(`${botName}-@${username}-${formattedDate}-${formattedTime}`);
+  }, [selectedDate, username, botName, schedule]);
+
+  // Handle sending invite
   const handleSendInvite = () => {
-    console.log(`Sending invite for botId: ${botId} to participants: ${participants} scheduled: ${schedule}`);
-    onClose();
+    const scheduleTime = schedule === 'later' ? selectedDate : new Date();  // Use current date-time for 'now'
+    const data = {
+      title: title,
+      participants: participants.split(',').map(user => user.trim()),  
+      schedule_time: scheduleTime,
+    };
+
+    console.log("Scheduling: ", data);
+    // POST request to the server
+    axios.post('/schedule', data)
+      .then(response => {
+        console.log('Successfully scheduled:', response.data);
+        onClose();
+      })
+      .catch(error => {
+        console.error('Error scheduling:', error);
+      });
   };
 
   return (
@@ -19,31 +48,56 @@ const GameInviteModal = ({ visible, onClose, botId }) => {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Invite Participants</Text>
+          <Text style={styles.modalTitle}>Invite To Play</Text>
 
+          {/* Title */}
+          <Text style={styles.generatedTitle}>{title}</Text>
+
+          {/* Participants Input */}
           <TextInput
             style={styles.input}
-            placeholder="Enter participant emails"
+            placeholder="Enter participant emails, separated by commas"
             value={participants}
             onChangeText={setParticipants}
           />
 
+          {/* Schedule Option */}
           <Text style={styles.scheduleTitle}>Schedule:</Text>
           <View style={styles.scheduleOptions}>
+            {/* "Now" Button */}
             <TouchableOpacity
               style={schedule === 'now' ? styles.selectedOption : styles.option}
-              onPress={() => setSchedule('now')}
+              onPress={() => {
+                setSchedule('now');
+                setShowDatePicker(false);  // Hide date picker when "Now" is selected
+              }}
             >
               <Text>Now</Text>
             </TouchableOpacity>
+
+            {/* "Later" Button */}
             <TouchableOpacity
               style={schedule === 'later' ? styles.selectedOption : styles.option}
-              onPress={() => setSchedule('later')}
+              onPress={() => {
+                setSchedule('later');
+                setShowDatePicker(true);  // Show date picker when "Later" is selected
+              }}
             >
               <Text>Later</Text>
             </TouchableOpacity>
           </View>
 
+          {/* Inline DatePicker below buttons, only visible when "Later" is selected */}
+          {schedule === 'later' && showDatePicker && (
+            <DatePicker
+              date={selectedDate}
+              onDateChange={setSelectedDate}  // Handle date change
+              mode="datetime"  // Can be "date", "time", or "datetime"
+              style={styles.datePicker}  // Optional, add styling
+            />
+          )}
+
+          {/* Send Invite and Cancel Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.button} onPress={handleSendInvite}>
               <Text style={styles.buttonText}>Send Invite</Text>
@@ -74,6 +128,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  generatedTitle: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 10,
   },
   input: {
     borderWidth: 1,
@@ -110,6 +169,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     alignItems: 'center',
     backgroundColor: '#FFD700',
+  },
+  datePicker: {
+    marginTop: 10,  // Adds spacing around DatePicker
   },
   buttonContainer: {
     flexDirection: 'row',

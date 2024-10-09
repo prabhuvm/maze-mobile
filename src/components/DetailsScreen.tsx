@@ -76,7 +76,8 @@ const DetailsScreen = ({ route }) => {
   const closeInviteModal = () => setInviteVisible(false); // Function to hide modal
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <ScrollView>
       <TouchableOpacity onPress={() => navigation.goBack()}>
         <Image source={require('../assets/icons/backi.png')} style={styles.icon} />
       </TouchableOpacity>
@@ -102,15 +103,15 @@ const DetailsScreen = ({ route }) => {
       <View style={styles.specificationsContainer}>
         {/* Add your specifications here */}
       </View>
-
+      </ScrollView>
       {/* Floating Bubble Button */}
       <TouchableOpacity style={styles.floatingButton} onPress={openInviteModal}>
-        <Text style={styles.floatingButtonText}>+</Text>
+        <Image source={require('../assets/icons/plus.png')} style={styles.fabIcon} />
       </TouchableOpacity>
 
       {/* Invite Modal */}
-      <GameInviteModal visible={inviteVisible} onClose={closeInviteModal} botId={bot.id} />
-    </ScrollView>
+      <GameInviteModal visible={inviteVisible} onClose={closeInviteModal} botId={bot.id} username={username} botName={bot.name}/>
+    </View>
   );
 };
 
@@ -172,9 +173,9 @@ const styles = StyleSheet.create({
   },
   floatingButton: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#6200EA',
+    right: 24,
+    bottom: 36,
+    backgroundColor: '#333',
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -182,10 +183,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1, // To make sure it's above other elements
   },
-  floatingButtonText: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
+  fabIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff',
   },
 });
 

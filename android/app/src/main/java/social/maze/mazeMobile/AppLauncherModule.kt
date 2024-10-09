@@ -30,6 +30,11 @@ class AppLauncherModule(reactContext: ReactApplicationContext) : ReactContextBas
     }
 
     private fun openPlayStore(packageName: String) {
+        // If Play Store app isn't available, open in browser
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName"))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            reactApplicationContext.startActivity(intent)
+        /*    
         try {
             // Try opening Play Store app first
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName"))
@@ -41,5 +46,6 @@ class AppLauncherModule(reactContext: ReactApplicationContext) : ReactContextBas
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             reactApplicationContext.startActivity(intent)
         }
+        */
     }
 }
