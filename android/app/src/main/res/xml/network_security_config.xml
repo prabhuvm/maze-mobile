@@ -1,8 +1,10 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">api.maze.social</domain>
+        <domain includeSubdomains="true">app.sample.maze</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">192.168.0.207</domain>
+        <domain includeSubdomains="true">192.168.31.253</domain>
     </domain-config>
 </network-security-config>

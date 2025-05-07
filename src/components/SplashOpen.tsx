@@ -55,7 +55,7 @@ useEffect(() => {
         setAvatarDict(avatarDictionary); // Update avatarDict state
       })
       .catch(error => console.error(error));
-
+      console.log("Timeline set in Open $$$$$$$")
       setInitialRoute('Timeline');
   }
 
@@ -185,7 +185,6 @@ useEffect(() => {
       <Animated.View style={{ opacity: opacity, transform: [{ scale: scale }] }}>
         <Image source={require('../assets/images/maze.jpeg')} style={styles.logo} />
         <Text style={styles.title}>MAZE</Text>
-        <Text style={styles.website}>visit maze.social</Text>
       </Animated.View>
     </View>
   );

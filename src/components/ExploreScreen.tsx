@@ -82,7 +82,7 @@ const ExploreScreen = () => {
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Explore</Text>
           {skip && (
-          <TouchableOpacity onPress={() => navigation.navigate('SplashSignup')}>
+         <TouchableOpacity onPress={() => navigation.navigate('SplashSignup')}>
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
           )}

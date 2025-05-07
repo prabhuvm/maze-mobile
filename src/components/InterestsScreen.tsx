@@ -37,7 +37,7 @@ const InterestsScreen = () => {
     )
       .then(response => {
         if (response.status === 201) {
-          navigation.navigate('Eligibility');
+          navigation.navigate('Update Profile', { setup: true });
         } else {
           alert('Failed to save interests');
         }

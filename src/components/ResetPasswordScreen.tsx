@@ -88,6 +88,8 @@ const ResetPasswordScreen = () => {
         .then(response => {
           if (response.data.success === 1) {
             alert('Password Reset Successful! You can login now.');
+            setIsVerified(false);
+            setVerificationSuccessMessage('');
             navigation.navigate('Login');
           } else {
             alert('Signup failed');

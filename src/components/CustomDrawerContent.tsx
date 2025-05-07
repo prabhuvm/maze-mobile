@@ -92,29 +92,29 @@ const CustomDrawerContent = ({ toggleInviteModal, ...props }) => {
           <Image source={require('../assets/icons/profile.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Profile</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Premium')}>
+        {/* <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Premium')}>
           <Image source={require('../assets/icons/badge-f.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Premium</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Coins')}>
           <Image source={require('../assets/icons/coins.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Coins</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.sectionDivider}></View>
+      {/* <View style={styles.sectionDivider}></View> */}
 
       {/* Communities Section */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionHeader}>Communities</Text>
-        <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Leaderboard')}>
+        {/* <Text style={styles.sectionHeader}>Social</Text> */}
+        {/* <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Leaderboard')}>
           <Image source={require('../assets/icons/leaderboard.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Leaderboard</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Community')}>
+        </TouchableOpacity> */}
+        {/* <TouchableOpacity style={styles.menuItem} onPress={() => props.navigation.navigate('Community')}>
           <Image source={require('../assets/icons/community.png')} style={styles.icon} />
           <Text style={styles.menuItemText}>Communities</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <View style={styles.sectionDivider}></View>

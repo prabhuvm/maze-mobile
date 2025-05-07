@@ -34,13 +34,14 @@ const AuthScreen = () => {
     console.log("###### Device identities - ID: ", deviceId, " Name: ", deviceName);
     apiClient.post('users/login/', { username, password, deviceId, deviceName })
       .then(response => {
-        const { accessToken, refreshToken } = response.data;
+        const {accessToken, refreshToken } = response.data;
         AsyncStorage.setItem('accessToken', accessToken);
         AsyncStorage.setItem('refreshToken', refreshToken);
         setUsername(username);
         setAccessToken(accessToken);
         setRefreshToken(refreshToken);
-        navigation.navigate('SplashLogin');
+        resetFields();
+        navigation.navigate('Eligibility');
       })
       .catch(error => {
         setVerifyError(true);
@@ -56,15 +57,27 @@ const AuthScreen = () => {
   };
 
   const handleResetPassword = () => {
+    resetFields();
     setModalVisible(true);
   };
+
+  const handleSignup = () => {
+    resetFields();
+    navigation.navigate('SignupStep');
+  }
+
+  const resetFields = () => {
+    setVerifyError(false);
+    setVerifyErrMessage('');
+    setStatusMessage('');
+  }
 
   return (
     <View style={styles.container}>
       <Image source={require('../assets/images/maze.jpeg')} style={styles.robotImage} />
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Username"
         value={username}
         onChangeText={setUsername}
       />
@@ -80,7 +93,7 @@ const AuthScreen = () => {
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SignupStep1')}>
+        <TouchableOpacity style={styles.button} onPress={handleSignup}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
       </View>

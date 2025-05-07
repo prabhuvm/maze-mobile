@@ -45,7 +45,12 @@ const DetailsScreen = ({ route }) => {
 
   const gotToChat = () => {
     if (bot.is_native) {
-      navigation.navigate("GameScreen", {appId : bot.agent_id});
+      const gameDetails = {
+        appId: bot.game_id,
+        botId: bot.id,
+        event: null // Pass the event ID to connect to the right game instance
+      }
+      navigation.navigate("GameScreen", gameDetails);
     } else {
       openAppOrStore(bot.deep_link_url);
     }

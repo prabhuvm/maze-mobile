@@ -219,4 +219,4 @@ const response = await apiClient.post(`/notifications/`,
 }
 );
 console.log("Response for notification: ", response.data);
-} 
+}; 

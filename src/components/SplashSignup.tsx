@@ -32,6 +32,7 @@ const SplashSignup = () => {
       })
       .catch(error => console.error(error));
 
+      console.log("Timeline set in Signup $$$$$$$")
     setInitialRoute('Timeline');
   }
 

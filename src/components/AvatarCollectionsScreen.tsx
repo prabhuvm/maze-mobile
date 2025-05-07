@@ -20,7 +20,12 @@ const CollectionsScreen = () => {
   }
 
   const gotToChat = (item) => {
-    navigation.navigate("GameScreen", {appId : item.agent_id});
+    const gameDetails = {
+      appId : item.game_id, 
+      botId: item.id, 
+      event: null
+    }
+    navigation.navigate("GameScreen", gameDetails);
 
   }
 

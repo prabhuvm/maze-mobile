@@ -36,6 +36,7 @@ const SplashLogin = () => {
       })
       .catch(error => console.error(error));
 
+      console.log("Timeline set in Login $$$$$$$")
     setInitialRoute('Timeline');
   }
 

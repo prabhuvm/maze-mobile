@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { apiClient } from '../api/client';
 import { useGlobalContext } from '../GlobalContext';
 
-const SplashLogin = () => {
+const SplashLogout = () => {
   const navigation = useNavigation();
   const opacity = useRef(new Animated.Value(1)).current; // Initial opacity value: 1 (fully visible)
   const [initialRoute, setInitialRoute] = useState('');
@@ -91,4 +91,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SplashLogin;
+export default SplashLogout;

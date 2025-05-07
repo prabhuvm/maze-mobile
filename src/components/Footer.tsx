@@ -17,17 +17,15 @@ const Footer = ({homePress, navigation}) => {
   };
 
   const playGame = async () => {
-    navigation.navigate('Store'); //todo: if button is on specific avatar, open the game.
+    navigation.navigate('GameStore'); //todo: if button is on specific avatar, open the game.
   };
+
 
   return (
     <>
       <View style={[styles.footerContainer, { backgroundColor: theme.background }]}>
         {/* <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Shopping')}>
           <Image source={require('../assets/icons/store.png')} style={styles.icon} />
-        </TouchableOpacity> */}
-        {/* <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Explore', {skip:false})}>
-          <Image source={require('../assets/icons/explore.png')} style={styles.icon} />
         </TouchableOpacity> */}
 
         <TouchableOpacity style={styles.iconButton} onPress={homePress}>
@@ -37,6 +35,7 @@ const Footer = ({homePress, navigation}) => {
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Tournaments')}>
           <Image source={require('../assets/icons/tournament.png')} style={styles.icon} />
         </TouchableOpacity>
+
         <View style={styles.dummyIconButton}>
           <Image source={require('../assets/icons/game.png')} style={[styles.icon, styles.invisibleIcon]} />
         </View>
@@ -48,13 +47,17 @@ const Footer = ({homePress, navigation}) => {
         <View style={styles.dummyIconButton}>
           <Image source={require('../assets/icons/game.png')} style={[styles.icon, styles.invisibleIcon]} />
         </View>
-        <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('StreamScreen')}>
+        {/* <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('StreamScreen')}>
           <Image source={require('../assets/icons/event-streams.png')} style={styles.icon} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* <TouchableOpacity style={styles.iconButton} onPress={() => {  navigation.navigate('Notification');}}>
             <Image source={require('../assets/icons/bell.png')}  style={styles.icon} />
           </TouchableOpacity> */}
+
+          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Explore', {skip:false})}>
+          <Image source={require('../assets/icons/explore.png')} style={styles.icon} />
+        </TouchableOpacity>
           
         <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('Message', {fusername:username})}>
           <Image source={require('../assets/icons/message.png')} style={styles.icon} />

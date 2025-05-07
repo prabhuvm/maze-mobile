@@ -13,6 +13,9 @@ const ResetPasswordModal = ({ navigation, visible, onClose }) => {
     if(sendStatus) {
       onClose();
       setStatusMessage('');
+      setEmailOrUsername('');
+      setButtonLabel('Send Verification Code');
+      setSendStatus(false);
       navigation.navigate('ResetPassword', {emailOrUsername, codeId});
     } else {
     apiClient.post('users/send-reset-code/', { emailOrUsername })

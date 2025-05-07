@@ -23,11 +23,11 @@ const PaymentsScreen = () => {
     getCredits();
   }, []);
 
-
+//ToDo: Feed this from backend.
   const purchases = [
-    { id: '1', name: 'AI generated blog post', range: '100 - 1,000 coins', image: 'path-to-blog-post-image' },
-    { id: '2', name: 'AI generated video', range: '500 - 5,000 coins', image: 'path-to-video-image' },
-    { id: '3', name: 'AI generated tweet', range: '10 - 100 coins', image: 'path-to-tweet-image' },
+    { id: '1', name: 'In-App Purchases', range: '100 - 1,000 coins', image: 'path-to-blog-post-image' },
+    { id: '2', name: 'Tournament Particpations', range: '500 - 5,000 coins', image: 'path-to-video-image' },
+    { id: '3', name: 'Access Premium Games', range: '10 - 100 coins', image: 'path-to-tweet-image' },
   ];
 
   const waysToAddCredits = [

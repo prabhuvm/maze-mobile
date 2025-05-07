@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import DatePicker from 'react-native-date-picker';  // Import the new date picker
 import axios from 'axios';  // Axios for making the POST request
+import { apiClient } from '../../api/client';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const GameInviteModal = ({ visible, onClose, botId, username, botName }) => {
   const [participants, setParticipants] = useState('');
@@ -15,21 +17,31 @@ const GameInviteModal = ({ visible, onClose, botId, username, botName }) => {
     const currentDate = schedule === 'later' ? selectedDate : new Date(); // Use selectedDate for 'later', or current date for 'now'
     const formattedDate = currentDate.toISOString().split('T')[0];  // Get only date part
     const formattedTime = currentDate.toTimeString().split(' ')[0]; // Get time part
-    setTitle(`${botName}-@${username}-${formattedDate}-${formattedTime}`);
+    setTitle(`${botName}@${username}-${formattedDate}-${formattedTime}`);
   }, [selectedDate, username, botName, schedule]);
 
   // Handle sending invite
-  const handleSendInvite = () => {
+  const handleSendInvite = async () => {
     const scheduleTime = schedule === 'later' ? selectedDate : new Date();  // Use current date-time for 'now'
     const data = {
       title: title,
       participants: participants.split(',').map(user => user.trim()),  
-      schedule_time: scheduleTime,
+      time: scheduleTime,
+      type: 'private',
+      username: username,
+      game_id: botId
     };
 
     console.log("Scheduling: ", data);
     // POST request to the server
-    axios.post('/schedule', data)
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    await apiClient.post('/events/', data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        }
+      })
       .then(response => {
         console.log('Successfully scheduled:', response.data);
         onClose();
