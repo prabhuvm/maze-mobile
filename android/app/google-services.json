@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "66799334889",
+    "project_number": "667994889",
     "project_id": "mazemobile-1e4f0",
     "storage_bucket": "mazemobile-1e4f0.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:66799334889:android:d345b7e2456f33bb284778",
+        "mobilesdk_app_id": "1:667993889:android:d345b7e2433bb284778",
         "android_client_info": {
           "package_name": "social.maze.mazeMobile"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCnouAGCArx6U2LH9ldHKHLg7lkYsWf_pY"
+          "current_key": "AIzaSyCnoulkYsWf_pY_randorm"
         }
       ],
       "services": {
